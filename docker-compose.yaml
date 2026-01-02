@@ -1,15 +1,6 @@
-name: heysendo
-
-# ============================================
-# HeySendo - Coolify Optimized Configuration
-# ============================================
-# This is a simplified version for Coolify deployment
-# Coolify will handle the reverse proxy and SSL
+name: heysendo-prod
 
 services:
-  # ============================================
-  # PostgreSQL Database
-  # ============================================
   postgres:
     image: postgres:16-alpine
     container_name: heysendo-db
@@ -27,9 +18,6 @@ services:
     volumes:
       - database:/var/lib/postgresql/data
 
-  # ============================================
-  # Redis Cache & Queue
-  # ============================================
   redis:
     image: redis:7-alpine
     container_name: heysendo-redis
@@ -43,44 +31,21 @@ services:
       - cache:/data
     command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
 
-  # ============================================
-  # MinIO Object Storage
-  # ============================================
   minio:
-    image: minio/minio:latest
+    image: minio/minio
     container_name: heysendo-storage
     restart: always
     ports:
-      - "9000:9000"
+      - "9002:9002"
       - "9001:9001"
     volumes:
       - storage:/data
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-    command: server /data --console-address ":9001"
+    entrypoint: sh
+    command: -c 'mkdir -p /data/${S3_BUCKET_NAME} && minio server /data --console-address ":9001" --address ":9002"'
 
-  # ============================================
-  # MinIO Bucket Initialization
-  # ============================================
-  minio-init:
-    image: minio/mc:latest
-    container_name: heysendo-minio-init
-    depends_on:
-      - minio
-    restart: "no"
-    entrypoint: >
-      /bin/sh -c "
-      sleep 10;
-      mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      mc mb myminio/${S3_BUCKET_NAME} --ignore-existing;
-      mc anonymous set download myminio/${S3_BUCKET_NAME};
-      exit 0;
-      "
-
-  # ============================================
-  # SMTP Server
-  # ============================================
   smtp:
     build:
       context: .
@@ -103,9 +68,6 @@ services:
       redis:
         condition: service_healthy
 
-  # ============================================
-  # Main Web Application
-  # ============================================
   web:
     build:
       context: .
@@ -119,56 +81,37 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Core
       - PORT=3000
       - NODE_ENV=production
-      
-      # Database & Cache
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
-      
-      # Storage (MinIO as S3)
-      - STORAGE_TYPE=s3
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXT_PUBLIC_APP_URL}
+      - GITHUB_ID=${GITHUB_ID}
+      - GITHUB_SECRET=${GITHUB_SECRET}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_IS_CLOUD=false
+      - DISABLE_SIGNUPS=${DISABLE_SIGNUPS:-false}
+      - SMTP_HOST=smtp
+      - SMTP_PORT=2525
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
       - S3_REGION=${S3_REGION:-us-east-1}
       - S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
       - S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
-      - S3_ENDPOINT=http://minio:9000
+      - S3_ENDPOINT=http://minio:9002
       - S3_FORCE_PATH_STYLE=true
-      
-      # Auth - NextAuth
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - NEXTAUTH_URL=${NEXT_PUBLIC_APP_URL}
-      
-      # Auth - GitHub OAuth
-      - GITHUB_ID=${GITHUB_ID}
-      - GITHUB_SECRET=${GITHUB_SECRET}
-      
-      # AWS SES
-      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
-      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
-      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
-      
-      # App Configuration
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-      - NEXT_PUBLIC_IS_CLOUD=false
-      - DISABLE_SIGNUPS=${DISABLE_SIGNUPS:-false}
-      
-      # SMTP Server
-      - SMTP_HOST=smtp
-      - SMTP_PORT=2525
-      
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_started
       smtp:
         condition: service_started
-    labels:
-      - "coolify.managed=true"
+      minio:
+        condition: service_started
 
 volumes:
   database:
