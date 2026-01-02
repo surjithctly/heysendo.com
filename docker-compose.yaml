@@ -1,4 +1,4 @@
-name: heysendo-prod
+name: heysendo
 
 services:
   postgres:
@@ -85,6 +85,13 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
+      - STORAGE_TYPE=s3
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - S3_ENDPOINT=http://minio:9002
+      - S3_FORCE_PATH_STYLE=true
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXT_PUBLIC_APP_URL}
       - GITHUB_ID=${GITHUB_ID}
@@ -97,21 +104,33 @@ services:
       - DISABLE_SIGNUPS=${DISABLE_SIGNUPS:-false}
       - SMTP_HOST=smtp
       - SMTP_PORT=2525
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - S3_REGION=${S3_REGION:-us-east-1}
-      - S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
-      - S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
-      - S3_ENDPOINT=http://minio:9002
-      - S3_FORCE_PATH_STYLE=true
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      smtp:
-        condition: service_started
       minio:
         condition: service_started
+      smtp:
+        condition: service_started
+    labels:
+      - "coolify.managed=true"
+
+  marketing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: marketing-runner
+    container_name: heysendo-marketing
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+    labels:
+      - "coolify.managed=true"
 
 volumes:
   database:
