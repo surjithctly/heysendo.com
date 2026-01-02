@@ -79,17 +79,10 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY --from=marketing-builder /app/out/full/ .
 RUN pnpm turbo run build --filter=marketing...
 
-FROM base AS marketing-runner
-WORKDIR /app
-COPY --from=marketing-installer /app/apps/marketing/next.config.js .
-COPY --from=marketing-installer /app/apps/marketing/package.json .
-COPY --from=marketing-installer /app/apps/marketing/.next/standalone ./
-COPY --from=marketing-installer /app/apps/marketing/.next/static ./apps/marketing/.next/static
-COPY --from=marketing-installer /app/apps/marketing/public ./apps/marketing/public
-ENV PORT=3000
-ENV NODE_ENV=production
-EXPOSE 3000
-CMD ["node", "apps/marketing/server.js"]
+FROM nginx:alpine AS marketing-runner
+COPY --from=marketing-installer /app/apps/marketing/out /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 
 # ============================================
 # SMTP SERVER
