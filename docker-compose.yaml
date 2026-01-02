@@ -35,9 +35,9 @@ services:
     image: minio/minio
     container_name: heysendo-storage
     restart: always
-    ports:
-      - "9002:9002"
-      - "9001:9001"
+    expose:
+      - "9002"
+      - "9001"
     volumes:
       - storage:/data
     environment:
