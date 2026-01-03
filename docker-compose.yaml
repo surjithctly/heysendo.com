@@ -78,8 +78,8 @@ services:
         - GIT_SHA=${GIT_SHA:-unknown}
     container_name: heysendo-web
     restart: always
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - PORT=3000
       - NODE_ENV=production
@@ -123,8 +123,8 @@ services:
       target: marketing-runner
     container_name: heysendo-marketing
     restart: always
-    ports:
-      - "3001:80"
+    expose:
+      - "3001"
     labels:
       - "coolify.managed=true"
 
