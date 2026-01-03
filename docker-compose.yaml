@@ -1,0 +1,121 @@
+name: heysendo
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: heysendo-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - database:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: heysendo-redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - cache:/data
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+
+  minio:
+    image: minio/minio
+    container_name: heysendo-storage
+    restart: always
+    expose:
+      - "9002"
+      - "9001"
+    volumes:
+      - storage:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    entrypoint: sh
+    command: -c 'mkdir -p /data/${S3_BUCKET_NAME} && minio server /data --console-address ":9001" --address ":9002"'
+
+  smtp:
+    image: ghcr.io/surjithctly/heysendo-smtp:latest
+    container_name: heysendo-smtp
+    restart: always
+    environment:
+      - SMTP_PORT=2525
+      - API_PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    image: ghcr.io/surjithctly/heysendo-web:latest
+    container_name: heysendo-web
+    restart: always
+    expose:
+      - "3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379
+      - STORAGE_TYPE=s3
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - S3_ENDPOINT=http://minio:9002
+      - S3_FORCE_PATH_STYLE=true
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXT_PUBLIC_APP_URL}
+      - GITHUB_ID=${GITHUB_ID}
+      - GITHUB_SECRET=${GITHUB_SECRET}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_IS_CLOUD=false
+      - DISABLE_SIGNUPS=${DISABLE_SIGNUPS:-false}
+      - SMTP_HOST=smtp
+      - SMTP_PORT=2525
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      smtp:
+        condition: service_started
+    labels:
+      - "coolify.managed=true"
+
+  marketing:
+    image: ghcr.io/surjithctly/heysendo-marketing:latest
+    container_name: heysendo-marketing
+    restart: always
+    expose:
+      - "80"
+    labels:
+      - "coolify.managed=true"
+
+volumes:
+  database:
+  cache:
+  storage:
