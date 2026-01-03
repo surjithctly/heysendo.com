@@ -67,6 +67,7 @@ services:
 
   web:
     image: ghcr.io/surjithctly/heysendo-web:latest
+    pull_policy: always
     container_name: heysendo-web
     restart: always
     expose:
@@ -109,6 +110,7 @@ services:
 
   marketing:
     image: ghcr.io/surjithctly/heysendo-marketing:latest
+    pull_policy: always
     container_name: heysendo-marketing
     restart: always
     expose:
