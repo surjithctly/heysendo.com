@@ -102,8 +102,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
-      smtp:
-        condition: service_started
+      # smtp:
+        # condition: service_started
     labels:
       - "coolify.managed=true"
 
