@@ -111,11 +111,10 @@ COPY --from=smtp-builder /app/out/full/ .
 RUN pnpm turbo run build --filter=smtp-server...
 
 FROM base AS smtp-runner
-WORKDIR /app
-COPY --from=smtp-installer /app/apps/smtp-server/dist ./apps/smtp-server/dist
-COPY --from=smtp-installer /app/apps/smtp-server/package.json ./apps/smtp-server/
-COPY --from=smtp-installer /app/node_modules ./node_modules
 WORKDIR /app/apps/smtp-server
+COPY --from=smtp-installer /app/apps/smtp-server/dist ./dist
+COPY --from=smtp-installer /app/apps/smtp-server/package.json ./
+COPY --from=smtp-installer /app/node_modules /app/node_modules
 ENV NODE_ENV=production
 EXPOSE 2525 3000
 CMD ["node", "dist/index.js"]
