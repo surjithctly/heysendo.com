@@ -18,6 +18,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY ./apps/web ./apps/web
 COPY ./packages ./packages
 RUN pnpm add turbo@^2.5.2 -g
+ENV REDIS_URL="redis://localhost:6379"
 RUN pnpm turbo prune web --docker
 
 FROM base AS web-installer
@@ -33,6 +34,7 @@ ARG GIT_SHA=unknown
 ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
 ENV NEXT_PUBLIC_GIT_SHA=$GIT_SHA
 COPY --from=web-builder /app/out/full/ .
+ENV REDIS_URL="redis://localhost:6379"
 RUN pnpm turbo run build --filter=web...
 
 FROM base AS web-runner
