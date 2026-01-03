@@ -45,24 +45,25 @@ services:
     entrypoint: sh
     command: -c 'mkdir -p /data/${S3_BUCKET_NAME} && minio server /data --console-address ":9001" --address ":9002"'
 
-  smtp:
-    image: ghcr.io/surjithctly/heysendo-smtp:latest
-    container_name: heysendo-smtp
-    restart: always
-    environment:
-      - SMTP_PORT=2525
-      - API_PORT=3000
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - REDIS_URL=redis://redis:6379
-      - NODE_ENV=production
-      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
-      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
-      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+  # Disable SMTP for now. Enable Later
+  # smtp:
+  #   image: ghcr.io/surjithctly/heysendo-smtp:latest
+  #   container_name: heysendo-smtp
+  #   restart: always
+  #   environment:
+  #     - SMTP_PORT=2525
+  #     - API_PORT=3000
+  #     - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  #     - REDIS_URL=redis://redis:6379
+  #     - NODE_ENV=production
+  #     - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+  #     - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+  #     - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
 
   web:
     image: ghcr.io/surjithctly/heysendo-web:latest
