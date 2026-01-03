@@ -23,10 +23,7 @@ function Slider({
 }: SliderProps) {
   const id = React.useId();
   const [dragging, setDragging] = React.useState(false);
-  const percent = Math.max(
-    0,
-    Math.min(100, ((value - min) / (max - min)) * 100)
-  );
+  const percent = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
 
   React.useEffect(() => {
     if (!dragging) return;
@@ -42,16 +39,22 @@ function Slider({
   }, [dragging]);
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-      <div className="w-full sm:w-56 md:w-72 shrink-0">
-        <label htmlFor={id} className="text-sm font-medium block">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label htmlFor={id} className="text-sm font-medium text-foreground">
           {label}
         </label>
-        <div className="mt-1 text-xs sm:text-sm text-muted-foreground tabular-nums truncate">
+        <div className="text-sm font-medium text-foreground tabular-nums">
           {value.toLocaleString()} {suffix}
         </div>
       </div>
-      <div className="relative flex-1">
+      <div className="relative">
+        <div className="h-2 bg-accent rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-75"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
         <input
           id={id}
           type="range"
@@ -63,16 +66,16 @@ function Slider({
           onMouseDown={() => setDragging(true)}
           onTouchStart={() => setDragging(true)}
           onPointerDown={() => setDragging(true)}
-          className="w-full accent-primary"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           aria-label={label}
           aria-valuetext={`${value.toLocaleString()} ${suffix}`}
         />
         {dragging && (
           <div
-            className="pointer-events-none absolute -top-9 left-0 -translate-x-1/2"
+            className="pointer-events-none absolute -top-10 -translate-x-1/2"
             style={{ left: `${percent}%` }}
           >
-            <div className="rounded-md bg-foreground px-2 py-1 text-[11px] font-medium text-background tabular-nums shadow whitespace-nowrap">
+            <div className="rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background tabular-nums shadow-lg whitespace-nowrap">
               {value.toLocaleString()} {suffix}
             </div>
           </div>
@@ -83,12 +86,10 @@ function Slider({
 }
 
 export function PricingCalculator() {
-  // Rates from pricing copy
-  const MARKETING_RATE = 0.001; // $ per marketing email
-  const TRANSACTIONAL_RATE = 0.0004; // $ per transactional email
-  const MINIMUM_SPEND = 10; // $ minimum monthly spend
+  const MARKETING_RATE = 0.001;
+  const TRANSACTIONAL_RATE = 0.0004;
+  const MINIMUM_SPEND = 10;
 
-  // Defaults chosen to total $10: 8000*$0.001 + 5000*$0.0004 = 10
   const [marketing, setMarketing] = React.useState<number>(5000);
   const [transactional, setTransactional] = React.useState<number>(12500);
 
@@ -98,75 +99,61 @@ export function PricingCalculator() {
   const totalDue = Math.max(subtotal, MINIMUM_SPEND);
 
   return (
-    <div className="rounded-[18px] bg-primary/20 p-1">
-      <div className="rounded-[14px] bg-primary/20 p-0.5 shadow-sm">
-        <div className="bg-background rounded-xl p-5 pb-10">
-          <div className="flex flex-col gap-6">
-            <div className="text-center">
-              <div className="text-sm uppercase tracking-wider text-primary">
-                Pricing Calculator
-              </div>
-              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                Drag the sliders to estimate your monthly cost.
-              </p>
-            </div>
+    <div className="bg-card rounded-2xl border border-border p-6 sm:p-8">
+      <div className="text-center mb-8">
+        <h3 className="text-xl font-serif text-foreground">Pricing Calculator</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Drag the sliders to estimate your monthly cost
+        </p>
+      </div>
 
-            <div className="grid grid-cols-1 gap-6">
-              <Slider
-                label="Marketing emails / month"
-                value={marketing}
-                onChange={setMarketing}
-                min={0}
-                max={3000000}
-                step={500}
-                suffix="emails"
-              />
-              <Slider
-                label="Transactional emails / month"
-                value={transactional}
-                onChange={setTransactional}
-                min={0}
-                max={3000000}
-                step={500}
-                suffix="emails"
-              />
-            </div>
+      <div className="space-y-8 max-w-xl mx-auto">
+        <Slider
+          label="Marketing emails / month"
+          value={marketing}
+          onChange={setMarketing}
+          min={0}
+          max={3000000}
+          step={500}
+          suffix="emails"
+        />
+        <Slider
+          label="Transactional emails / month"
+          value={transactional}
+          onChange={setTransactional}
+          min={0}
+          max={3000000}
+          step={500}
+          suffix="emails"
+        />
+      </div>
 
-            <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-              <div className="rounded-lg border border-primary/30 p-4">
-                <div className="text-xs text-muted-foreground">Marketing</div>
-                <div className="text-lg font-medium">
-                  ${marketingCost.toFixed(2)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  @ ${MARKETING_RATE.toFixed(4)} each
-                </div>
-              </div>
-              <div className="rounded-lg border border-primary/30 p-4">
-                <div className="text-xs text-muted-foreground">
-                  Transactional
-                </div>
-                <div className="text-lg font-medium">
-                  ${transactionalCost.toFixed(2)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  @ ${TRANSACTIONAL_RATE.toFixed(4)} each
-                </div>
-              </div>
-              <div className="rounded-lg border border-primary/30 p-4 bg-primary/10">
-                <div className="text-xs text-muted-foreground">
-                  Estimated Total
-                </div>
-                <div className="text-3xl text-primary font-semibold">
-                  ${totalDue.toFixed(2)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {subtotal < MINIMUM_SPEND
-                    ? "Minimum $10 applies"
-                    : "before taxes"}
-                </div>
-              </div>
-            </div>
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl bg-accent p-4">
+          <div className="text-xs text-muted-foreground mb-1">Marketing</div>
+          <div className="text-2xl font-serif text-foreground">
+            ${marketingCost.toFixed(2)}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            @ ${MARKETING_RATE.toFixed(4)} each
+          </div>
+        </div>
+        <div className="rounded-xl bg-accent p-4">
+          <div className="text-xs text-muted-foreground mb-1">Transactional</div>
+          <div className="text-2xl font-serif text-foreground">
+            ${transactionalCost.toFixed(2)}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            @ ${TRANSACTIONAL_RATE.toFixed(4)} each
+          </div>
+        </div>
+        <div className="rounded-xl bg-primary p-4 text-primary-foreground">
+          <div className="text-xs opacity-70 mb-1">Estimated Total</div>
+          <div className="text-3xl font-serif">
+            ${totalDue.toFixed(2)}
+          </div>
+          <div className="text-xs opacity-70 mt-1">
+            {subtotal < MINIMUM_SPEND ? "Minimum $10 applies" : "per month"}
           </div>
         </div>
       </div>

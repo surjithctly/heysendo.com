@@ -1,108 +1,156 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@usesend/ui/src/button";
+import { ThemeToggle } from "./ThemeToggle";
 
 const REPO = "usesend/usesend";
 const REPO_URL = `https://github.com/${REPO}`;
-const APP_URL = "https://app.usesend.com";
+const APP_URL = "https://app.heysendo.com";
 
 export function TopNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const isHome = pathname === "/";
   const pricingHref = isHome ? "#pricing" : "/#pricing";
+  const featuresHref = isHome ? "#features" : "/#features";
 
   return (
-    <header className="py-4 border-b border-border sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-sidebar-background/80">
-      <div className="mx-auto max-w-6xl px-6 flex items-center justify-between gap-4 text-sm">
-        <Link href="/" className="flex items-center gap-2 group">
-          <Image src="/logo-squircle.png" alt="useSend" width={24} height={24} />
-          <span className="text-primary font-mono text-[16px] group-hover:opacity-90">useSend</span>
+    <header className="py-5 sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50">
+      <div className="mx-auto max-w-6xl px-6 flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-serif text-lg">
+              s
+            </span>
+          </div>
+          <span className="text-foreground font-medium text-base tracking-tight">
+            Sendo
+          </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden sm:flex items-center gap-4 text-muted-foreground">
-          <Link href={pricingHref} className="hover:text-foreground">
+        {/* Desktop nav - center */}
+        <nav className="hidden md:flex items-center gap-1 text-sm">
+          <Link
+            href={featuresHref}
+            className="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors">
+            Features
+          </Link>
+          <span className="text-border">/</span>
+          <Link
+            href={pricingHref}
+            className="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors">
             Pricing
           </Link>
+          <span className="text-border">/</span>
           <a
             href="https://docs.usesend.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-foreground"
-          >
+            className="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors">
             Docs
           </a>
+          <span className="text-border">/</span>
           <a
             href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-foreground"
-          >
+            className="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors">
             GitHub
           </a>
-          <Button size="sm" className="ml-2">
-            <a href={APP_URL} target="_blank" rel="noopener noreferrer">
-              Get started
-            </a>
-          </Button>
         </nav>
 
-        {/* Mobile hamburger */}
-        <button
-          aria-label="Open menu"
-          className="sm:hidden inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-border"
-          onClick={() => setOpen((v) => !v)}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
-            {open ? (
-              <path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-            ) : (
-              <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round" strokeLinejoin="round" />
-            )}
-          </svg>
-        </button>
+        {/* Right side - CTA + Theme toggle */}
+        <div className="hidden md:flex items-center gap-3">
+          <a href={APP_URL} target="_blank" rel="noopener noreferrer">
+            <Button size="sm" className="px-4 h-9 rounded-full font-medium">
+              Get started
+            </Button>
+          </a>
+          <ThemeToggle />
+        </div>
+
+        {/* Mobile - hamburger + theme toggle */}
+        <div className="flex md:hidden items-center gap-2">
+          <ThemeToggle />
+          <button
+            aria-label={open ? "Close menu" : "Open menu"}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            onClick={() => setOpen((v) => !v)}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="w-5 h-5">
+              {open ? (
+                <path
+                  d="M6 18 18 6M6 6l12 12"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              ) : (
+                <path
+                  d="M4 8h16M4 16h16"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu panel */}
-      {open ? (
-        <div className="sm:hidden border-t border-border bg-sidebar-background/95 backdrop-blur">
-          <div className="mx-auto max-w-6xl px-6 py-3 flex flex-col gap-2">
-            <Link href={pricingHref} className="py-2 text-muted-foreground hover:text-foreground" onClick={() => setOpen(false)}>
+      {open && (
+        <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-md">
+          <div className="mx-auto max-w-6xl px-6 py-4 flex flex-col gap-1">
+            <Link
+              href={featuresHref}
+              className="py-2.5 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setOpen(false)}>
+              Features
+            </Link>
+            <Link
+              href={pricingHref}
+              className="py-2.5 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setOpen(false)}>
               Pricing
             </Link>
             <a
               href="https://docs.usesend.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="py-2 text-muted-foreground hover:text-foreground"
-              onClick={() => setOpen(false)}
-            >
+              className="py-2.5 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setOpen(false)}>
               Docs
             </a>
-            <a
+            {/* <a
               href={REPO_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="py-2 text-muted-foreground hover:text-foreground"
-              onClick={() => setOpen(false)}
-            >
+              className="py-2.5 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setOpen(false)}>
               GitHub
-            </a>
-            <div className="pt-2">
-              <Button className="w-full">
-                <a href={APP_URL} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>
+            </a> */}
+            <div className="pt-3 mt-2 border-t border-border/50">
+              <a
+                href={APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}>
+                <Button className="w-full rounded-full font-medium">
                   Get started
-                </a>
-              </Button>
+                </Button>
+              </a>
             </div>
           </div>
         </div>
-      ) : null}
+      )}
     </header>
   );
 }

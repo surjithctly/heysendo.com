@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Button } from "@usesend/ui/src/button";
 
 type LangItem = {
   key: string;
   label: string;
-  kind: "ts" | "py" | string; // used for icon selection
+  kind: "ts" | "py" | string;
 };
 
 export function LangToggle({
@@ -41,25 +40,21 @@ export function LangToggle({
   }, [active, containerId]);
 
   return (
-    <div className="flex items-center gap-2 justify-center">
+    <div className="inline-flex items-center gap-1 p-1 bg-accent rounded-full border border-border">
       {languages.map((l) => (
-        <Button
+        <button
           key={l.key}
-          size="sm"
-          variant="outline"
-          className={
-            "px-3 bg-transparent hover:bg-transparent hover:text-inherit " +
-            (active === l.key
-              ? "border-primary"
-              : "border-input")
-          }
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            active === l.key
+              ? "bg-card text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
           aria-pressed={active === l.key}
           onClick={() => setActive(l.key)}
         >
-          <span className="inline-flex items-center">
-            <LangIcon kind={l.kind} className="h-4 w-4 mr-1" /> {l.label}
-          </span>
-        </Button>
+          <LangIcon kind={l.kind} className="w-4 h-4" />
+          <span className="hidden sm:inline">{l.label}</span>
+        </button>
       ))}
     </div>
   );
@@ -67,6 +62,7 @@ export function LangToggle({
 
 function LangIcon({ kind, className = "h-4 w-4" }: { kind: string; className?: string }) {
   const [failed, setFailed] = useState(false);
+
   if (failed) {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true" className={className} role="img">
@@ -74,11 +70,12 @@ function LangIcon({ kind, className = "h-4 w-4" }: { kind: string; className?: s
       </svg>
     );
   }
+
   if (kind === "ts")
     return (
       <Image
         src="/typescript.svg"
-        alt="TypeScript logo"
+        alt="TypeScript"
         width={16}
         height={16}
         className={className}
@@ -90,7 +87,7 @@ function LangIcon({ kind, className = "h-4 w-4" }: { kind: string; className?: s
     return (
       <Image
         src="/python.svg"
-        alt="Python logo"
+        alt="Python"
         width={16}
         height={16}
         className={className}
@@ -102,7 +99,7 @@ function LangIcon({ kind, className = "h-4 w-4" }: { kind: string; className?: s
     return (
       <Image
         src="/go.svg"
-        alt="Go logo"
+        alt="Go"
         width={16}
         height={16}
         className={className}
@@ -114,7 +111,7 @@ function LangIcon({ kind, className = "h-4 w-4" }: { kind: string; className?: s
     return (
       <Image
         src="/php.svg"
-        alt="PHP logo"
+        alt="PHP"
         width={16}
         height={16}
         className={className}

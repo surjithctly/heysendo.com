@@ -1,7 +1,7 @@
 import "@usesend/ui/styles/globals.css";
+import "./marketing.css";
 
-import { Inter } from "next/font/google";
-import { JetBrains_Mono } from "next/font/google";
+import { Inter, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@usesend/ui";
 import Script from "next/script";
@@ -11,27 +11,34 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+});
+
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
-  title: "useSend – Open source email platform",
+  title: "Sendo – Open source email platform",
   description: "Pay only for what you send, not for storing contacts",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
   metadataBase: new URL("https://usesend.com"),
   openGraph: {
-    title: "useSend – Open source email platform",
+    title: "Sendo – Open source email platform",
     description: "Pay only for what you send, not for storing contacts",
-    url: "https://usesend.com",
-    siteName: "useSend",
+    url: "https://heysendo.com",
+    siteName: "Sendo",
     images: [
       {
         url: "https://uploads.usesend.com/logos/og.png",
         width: 1200,
         height: 630,
-        alt: "useSend – Open source email platform",
+        alt: "Sendo – Open source email platform",
         type: "image/png",
       },
     ],
@@ -40,7 +47,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "useSend – Open source email platform",
+    title: "Sendo – Open source email platform",
     description: "Pay only for what you send, not for storing contacts",
     images: ["https://uploads.usesend.com/logos/og.png"],
   },
@@ -49,7 +56,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   alternates: {
-    canonical: "https://usesend.com",
+    canonical: "https://heysendo.com",
   },
 };
 
@@ -62,21 +69,18 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className="scroll-smooth bg-background"
-    >
+      className="scroll-smooth bg-background">
       {process.env.NODE_ENV === "production" && (
         <Script src="https://scripts.simpleanalyticscdn.com/latest.js" />
       )}
       <body
-        className={`font-mono ${inter.variable} ${jetbrainsMono.variable} bg-background`}
-      >
+        className={`font-sans ${inter.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} bg-background antialiased`}>
         {/* System theme with isolated storage to avoid stale overrides */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
-          storageKey="marketing-theme"
-        >
+          storageKey="marketing-theme">
           {children}
         </ThemeProvider>
       </body>

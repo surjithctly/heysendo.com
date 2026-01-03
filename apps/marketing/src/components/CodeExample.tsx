@@ -39,9 +39,9 @@ import (
 )
 
 func main() {
-    url := "https://app.usesend.com/api/v1/emails"
+    url := "https://app.heysendo.com/api/v1/emails"
 
-    payload := strings.NewReader("{\n     \\\"to\\\": \\\"hello@acme.com\\\",\n     \\\"from\\\": \\\"hello@company.com\\\",\n     \\\"subject\\\": \\\"useSend email\\\",\n     \\\"html\\\": \\\"<p>useSend is the best open source product to send emails</p>\\\",\n     \\\"text\\\": \\\"useSend is the best open source product to send emails\\\"\n    }")
+    payload := strings.NewReader("{\n     \\"to\\": \\"hello@acme.com\\",\n     \\"from\\": \\"hello@company.com\\",\n     \\"subject\\": \\"Sendo email\\",\n     \\"html\\": \\"<p>Sendo is the best open source product to send emails</p>\\",\n     \\"text\\": \\"Sendo is the best open source product to send emails\\"\\n    }")
 
     req, _ := http.NewRequest("POST", url, payload)
     req.Header.Add("Content-Type", "application/json")
@@ -57,7 +57,7 @@ func main() {
 
 const PHP_CODE = `<?php
 
-$ch = curl_init('https://app.usesend.com/api/v1/emails');
+$ch = curl_init('https://app.heysendo.com/api/v1/emails');
 curl_setopt_array($ch, [
   CURLOPT_RETURNTRANSFER => true,
   CURLOPT_HTTPHEADER => [
@@ -116,20 +116,24 @@ export function CodeExample() {
   ];
 
   return (
-    <section className="py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="text-center">
-          <div className="mb-2 text-sm uppercase tracking-wider text-primary">
-            Developers
-          </div>
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto">
+    <section className="py-20 sm:py-28 bg-accent/30">
+      <div className="mx-auto max-w-5xl px-6">
+        {/* Section header */}
+        <div className="text-center mb-10">
+          <p className="section-label mb-3">Developers</p>
+          <h2 className="text-3xl sm:text-4xl font-serif text-foreground">
+            Built for developers
+          </h2>
+          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
             Typed SDKs and simple APIs, so you can focus on product not
             plumbing.
           </p>
         </div>
 
-        <div className="mt-8 overflow-hidden" id={containerId}>
-          <div className="flex items-center gap-2 justify-center py-2 text-xs text-muted-foreground mb-4">
+        {/* Code block */}
+        <div id={containerId}>
+          {/* Language toggle */}
+          <div className="flex justify-center mb-6">
             <LangToggle
               containerId={containerId}
               defaultLang="ts"
@@ -140,44 +144,39 @@ export function CodeExample() {
               }))}
             />
           </div>
-          <div className="rounded-[18px] bg-primary/20 p-1">
-            <div className="rounded-[14px] bg-primary/20 p-0.5 shadow-sm">
-              <div className="bg-background rounded-xl overflow-hidden">
-                {languages.map((l, idx) => (
-                  <div
-                    key={l.key}
-                    data-lang-slot={l.key}
-                    className={idx === 0 ? "block" : "hidden"}
-                  >
-                    {/* Cast to any to align with shiki BundledLanguage without importing types here */}
-                    <CodeBlockWithCopy code={l.code}>
-                      <CodeBlock
-                        lang={l.shiki as any}
-                        className="p-4 rounded-[10px]"
-                      >
-                        {l.code}
-                      </CodeBlock>
-                    </CodeBlockWithCopy>
-                  </div>
-                ))}
+
+          {/* Code container */}
+          <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-lg">
+            {languages.map((l, idx) => (
+              <div
+                key={l.key}
+                data-lang-slot={l.key}
+                className={idx === 0 ? "block" : "hidden"}>
+                <CodeBlockWithCopy code={l.code}>
+                  <CodeBlock
+                    lang={l.shiki as any}
+                    className="p-5 sm:p-6 text-sm">
+                    {l.code}
+                  </CodeBlock>
+                </CodeBlockWithCopy>
               </div>
-            </div>
+            ))}
           </div>
           <div className="sr-only" aria-live="polite">
             Language example toggled
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <Button size="lg" className="px-6">
-            <a
-              href="https://docs.usesend.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+        {/* CTA */}
+        <div className="mt-10 flex justify-center">
+          <a
+            href="https://docs.usesend.com"
+            target="_blank"
+            rel="noopener noreferrer">
+            <Button size="lg" className="px-8 h-12 rounded-full font-medium">
               Read the docs
-            </a>
-          </Button>
+            </Button>
+          </a>
         </div>
       </div>
     </section>

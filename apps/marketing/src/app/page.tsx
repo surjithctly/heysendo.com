@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { SiteFooter } from "~/components/SiteFooter";
 import { GitHubStarsButton } from "~/components/GitHubStarsButton";
 import { Button } from "@usesend/ui/src/button";
@@ -10,13 +9,11 @@ import { PricingCalculator } from "~/components/PricingCalculator";
 import CodeExample from "~/components/CodeExample";
 import { Avatar, AvatarFallback, AvatarImage } from "@usesend/ui/src/avatar";
 
-const REPO = "usesend/usesend";
-const REPO_URL = `https://github.com/${REPO}`;
-const APP_URL = "https://app.usesend.com";
+const APP_URL = "https://app.heysendo.com";
 
 export default function Page() {
   return (
-    <main className="min-h-screen  text-foreground bg-background">
+    <main className="min-h-screen text-foreground bg-background">
       <TopNav />
       <Hero />
       <TrustedBy />
@@ -29,99 +26,108 @@ export default function Page() {
   );
 }
 
-// (Removed unused SectionHeading component)
-
 function Hero() {
   return (
-    <section>
-      <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
-        <h1 className="mt-6 text-center text-2xl sm:text-4xl font-semibold text-primary font-sans">
-          The open source email platform for everyone
+    <section className="relative overflow-hidden">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-accent/30 via-background to-background pointer-events-none" />
+
+      <div className="relative mx-auto max-w-5xl px-6 pt-20 pb-16 sm:pt-28 sm:pb-24">
+        {/* Badge */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent border border-border text-sm text-muted-foreground">
+            <span className="w-2 h-2 rounded-full bg-green animate-pulse" />
+            Open source email platform
+          </div>
+        </div>
+
+        {/* Main heading - using Instrument Serif */}
+        <h1 className="text-center text-4xl sm:text-5xl md:text-6xl font-serif text-foreground leading-[1.1] tracking-tight">
+          Send emails that
+          <br />
+          <span className="italic">actually get delivered</span>
         </h1>
-        <p className="mt-4 text-center text-base sm:text-lg  font-sans max-w-2xl mx-auto">
-          Send product, transactional and marketing emails.{" "}
-          <span className="text-primary font-normal">
-            Pay only for what you send
-          </span>{" "}
-          and not for storing contacts.
+
+        <p className="mt-6 text-center text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          The open source email platform for product, transactional and
+          marketing emails.{" "}
+          <span className="text-foreground">Pay only for what you send</span> —
+          not for storing contacts.
         </p>
 
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Button size="lg" className="px-6">
-            <a href={APP_URL} target="_blank" rel="noopener noreferrer">
-              Get started
-            </a>
-          </Button>
-
+        {/* CTA buttons */}
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href={APP_URL} target="_blank" rel="noopener noreferrer">
+            <Button
+              size="lg"
+              className="px-8 h-12 rounded-full text-base font-medium">
+              Start sending for free
+            </Button>
+          </a>
           <GitHubStarsButton />
         </div>
 
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          Open source • Self-host in minutes • Free tier
+        {/* Trust indicators */}
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Open source · Set up in minutes · Free tier included
         </p>
 
-        <div className="mt-12 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
-          <p className="text-xs">Proudly sponsored by</p>
+        {/* Sponsor */}
+        {/* <div className="mt-12 flex flex-col items-center gap-3">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">
+            Proudly sponsored by
+          </p>
           <a
-            href="https://coderabbit.ai/?utm_source=useSend.com"
+            href="https://web3forms.com/?utm_source=heysendo.com"
             target="_blank"
-          >
+            rel="noopener noreferrer"
+            className="opacity-70 hover:opacity-100 transition-opacity">
             <Image
-              src="/code-rabbit-usesend-dark.svg"
+              src="https://web3forms.com/img/logo-light.svg"
               alt="Code Rabbit"
-              width={200}
-              height={100}
+              width={180}
+              height={90}
               className="dark:hidden"
-              rel="noopener noreferrer"
             />
-          </a>
-          <a
-            href="https://coderabbit.ai/?utm_source=useSend.com"
-            target="_blank"
-          >
             <Image
-              src="/code-rabbit-usesend-light.svg"
+              src="https://web3forms.com/img/web3forms-logo.svg"
               alt="Code Rabbit"
-              width={200}
-              height={100}
+              width={180}
+              height={90}
               className="hidden dark:block"
-              rel="noopener noreferrer"
             />
           </a>
-        </div>
+        </div> */}
 
-        <div className=" mt-32 mx-auto max-w-5xl">
-          <div className="rounded-[18px] bg-primary/10 p-1 sm:p-1 ">
-            <div className="rounded-2xl bg-primary/20 p-1 sm:p-1 ">
-              <Image
-                src="/hero-light.webp"
-                alt="useSend product hero"
-                width={3456}
-                height={1914}
-                className="w-full h-auto rounded-xl block dark:hidden"
-                sizes="(min-width: 1024px) 900px, 100vw"
-                loading="eager"
-                priority={false}
-              />
-              <Image
-                src="/hero-dark.webp"
-                alt="useSend product hero"
-                width={3456}
-                height={1914}
-                className="w-full h-auto rounded-xl hidden dark:block"
-                sizes="(min-width: 1024px) 900px, 100vw"
-                loading="eager"
-                priority={false}
-              />
-            </div>
+        {/* Hero image */}
+        <div className="mt-16 sm:mt-20">
+          <div className="relative rounded-2xl overflow-hidden border border-border bg-card shadow-2xl shadow-primary/5">
+            <Image
+              src="/hero-light.webp"
+              alt="useSend dashboard"
+              width={3456}
+              height={1914}
+              className="w-full h-auto block dark:hidden"
+              sizes="(min-width: 1024px) 900px, 100vw"
+              loading="eager"
+              priority
+            />
+            <Image
+              src="/hero-dark.webp"
+              alt="useSend dashboard"
+              width={3456}
+              height={1914}
+              className="w-full h-auto hidden dark:block"
+              sizes="(min-width: 1024px) 900px, 100vw"
+              loading="eager"
+              priority
+            />
           </div>
         </div>
       </div>
     </section>
   );
 }
-
-// TopNav moved to a dedicated client component in ~/components/TopNav
 
 function TrustedBy() {
   const featured = [
@@ -168,68 +174,69 @@ function TrustedBy() {
   ];
 
   return (
-    <section className="py-10 sm:py-20 ">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="text-center tracking-wider text-muted-foreground">
-          <span className="">Builders and open source teams love </span>
-          <span className="text-primary font-bold">useSend</span>
-        </div>
+    <section className="py-20 sm:py-28 bg-accent/30">
+      <div className="mx-auto max-w-5xl px-6">
+        <p className="text-center text-sm text-muted-foreground mb-10">
+          Builders and open source teams love{" "}
+          <span className="text-foreground font-medium">Sendo</span>
+        </p>
 
-        {/* Top: 2 larger testimonials */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Featured testimonials */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {featured.map((t) => (
             <figure
               key={t.author + t.company}
-              className="rounded-xl border border-primary/30 p-5 h-full"
-            >
-              <blockquote className="text-sm sm:text-base font-light font-sans ">
-                {t.quote}
+              className="bg-card rounded-xl border border-border p-6 hover-lift">
+              <blockquote className="text-foreground leading-relaxed">
+                "{t.quote}"
               </blockquote>
               <div className="mt-5 flex items-center gap-3">
-                <Avatar className="rounded-lg border-2 border-primary/50 h-8 w-8">
-                  <AvatarImage src={t.image} alt={`${t.author} avatar`} />
-                  <AvatarFallback className="rounded-lg text-xs">{t.author.charAt(0).toUpperCase()}</AvatarFallback>
-                </Avatar> 
-                <figcaption className="text-sm">
-                  <span className="font-medium">{t.author}</span>
+                <Avatar className="h-10 w-10 border-2 border-border">
+                  <AvatarImage src={t.image} alt={t.author} />
+                  <AvatarFallback>{t.author.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <figcaption>
+                  <div className="font-medium text-foreground">{t.author}</div>
                   <a
                     href={`https://${t.company}`}
                     target="_blank"
-                    className="text-muted-foreground hover:text-primary-light"
-                  >
-                    {" "}
-                    — {t.company}
-                  </a>{" "}
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-primary-light transition-colors">
+                    {t.company}
+                  </a>
                 </figcaption>
               </div>
             </figure>
           ))}
         </div>
 
-        {/* Bottom: 3 multi-line testimonials (same style as top) */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Quick testimonials */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {quick.map((t) => (
             <figure
               key={t.author + t.company}
-              className="rounded-xl border border-primary/30 p-5 h-full"
-            >
-              <blockquote className="text-sm sm:text-base font-light font-sans leading-relaxed">
-                {t.quote}
+              className="bg-card rounded-xl border border-border p-5 hover-lift">
+              <blockquote className="text-foreground text-sm leading-relaxed">
+                "{t.quote}"
               </blockquote>
-              <div className="mt-5 flex items-center gap-3">
-                <Avatar className="rounded-lg border-2 border-primary/50 h-8 w-8">
-                  <AvatarImage src={t.image} alt={`${t.author} avatar`} />
-                  <AvatarFallback className="rounded-lg text-xs">{t.author.charAt(0).toUpperCase()}</AvatarFallback>
+              <div className="mt-4 flex items-center gap-3">
+                <Avatar className="h-8 w-8 border border-border">
+                  <AvatarImage src={t.image} alt={t.author} />
+                  <AvatarFallback className="text-xs">
+                    {t.author.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
                 <figcaption className="text-sm">
-                  <span className="font-medium">{t.author}</span>
+                  <span className="font-medium text-foreground">
+                    {t.author}
+                  </span>
+                  <span className="text-muted-foreground"> · </span>
                   <a
                     href={`https://${t.company}`}
                     target="_blank"
-                    className="text-muted-foreground hover:text-primary-light"
-                  >
-                    {" "}
-                    — {t.company}
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary-light transition-colors">
+                    {t.company}
                   </a>
                 </figcaption>
               </div>
@@ -242,13 +249,12 @@ function TrustedBy() {
 }
 
 function Features() {
-  // Top: 2 cards (with image area) — Analytics, Editor
   const top = [
     {
       key: "feature-analytics",
       title: "Analytics",
       content:
-        "Track deliveries, opens, clicks, bounces and unsubscribes in real time with a simple, searchable log. Filter by domain, status, api key and export them. Track which campaigns perform best.",
+        "Track deliveries, opens, clicks, bounces and unsubscribes in real time with a simple, searchable log. Filter by domain, status, api key and export them.",
       imageLightSrc: "/emails-search-light.webp",
       imageDarkSrc: "/emails-search-dark.webp",
     },
@@ -256,45 +262,46 @@ function Features() {
       key: "feature-editor",
       title: "Marketing Email Editor",
       content:
-        "Design beautiful campaigns without code using a visual, notion like WYSIWYG editor that works in major email clients. Reuse templates and brand styles, and personalize with variables.",
+        "Design beautiful campaigns without code using a visual, notion-like WYSIWYG editor that works in major email clients.",
       imageLightSrc: "/editor-light.webp",
       imageDarkSrc: "/editor-dark.webp",
     },
   ];
 
-  // Bottom: 3 cards (no images) — Contact Management, Suppression List, SMTP Relay Service
   const bottom = [
     {
       key: "feature-contacts",
       title: "Contact Management",
       content:
-        "Manage contacts, lists, and consent in one place. Import and export easily, keep per-list subscription status. Contacts are automatically updated from bounces and complaints.",
+        "Manage contacts, lists, and consent in one place. Import and export easily, keep per-list subscription status.",
     },
     {
       key: "feature-suppression",
       title: "Suppression List",
       content:
-        "Prevent accidental sends. Automatically populated from bounces and complaints, and manage via import/export or API. Works with transactional and marketing emails.",
+        "Prevent accidental sends. Automatically populated from bounces and complaints, manage via import/export or API.",
     },
     {
       key: "feature-smtp",
       title: "SMTP Relay",
       content:
-        "Drop-in SMTP relay that works with any app or framework. Do not get vendor lock-in. Comes in handy with services like Supabase",
+        "Drop-in SMTP relay that works with any app or framework. No vendor lock-in. Works great with Supabase.",
     },
   ];
 
   return (
-    <section id="features" className="py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="text-center">
-          <div className="mb-2 text-sm uppercase tracking-wider text-primary">
-            Features
-          </div>
+    <section id="features" className="py-20 sm:py-28">
+      <div className="mx-auto max-w-5xl px-6">
+        {/* Section header */}
+        <div className="text-center mb-12">
+          <p className="section-label mb-3">Features</p>
+          <h2 className="text-3xl sm:text-4xl font-serif text-foreground">
+            Everything you need to send emails
+          </h2>
         </div>
 
-        {/* Top row: 2 side-by-side cards with images */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Feature cards with images */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {top.map((f) => (
             <FeatureCard
               key={f.key}
@@ -306,7 +313,7 @@ function Features() {
           ))}
         </div>
 
-        {/* Bottom row: 3 cards without images */}
+        {/* Feature cards without images */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
           {bottom.map((f) => (
             <FeatureCardPlain key={f.key} title={f.title} content={f.content} />
@@ -317,39 +324,40 @@ function Features() {
   );
 }
 
-// CodeExample moved to a dedicated client component in ~/components/CodeExample
-
 function Pricing() {
   const freePerks = [
-    "Send up to 3000 emails per month",
+    "Send up to 3,000 emails per month",
     "Send up to 100 emails per day",
-    "Can have 1 contact book",
-    "Can have 1 domain",
-    "Can have 1 team member",
+    "1 contact book",
+    "1 domain",
+    "1 team member",
   ];
 
   const paidPerks = [
     "$10 monthly usage credits",
-    "Send transactional emails at $0.0004 per email",
-    "Send marketing emails at $0.001 per email",
-    "Can have unlimited contact books",
-    "Can have unlimited domains",
-    "Can have unlimited team members",
+    "Transactional emails at $0.0004 each",
+    "Marketing emails at $0.001 each",
+    "Unlimited contact books",
+    "Unlimited domains",
+    "Unlimited team members",
   ];
 
   return (
-    <section id="pricing" className="py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="text-center">
-          <div className="mb-2 text-sm uppercase tracking-wider text-primary">
-            PRICING
-          </div>
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto">
-            pay for what you use, the most affordable email platform
+    <section id="pricing" className="py-20 sm:py-28 bg-accent/30">
+      <div className="mx-auto max-w-5xl px-6">
+        {/* Section header */}
+        <div className="text-center mb-12">
+          <p className="section-label mb-3">Pricing</p>
+          <h2 className="text-3xl sm:text-4xl font-serif text-foreground">
+            Simple, transparent pricing
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Pay for what you use. The most affordable email platform.
           </p>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Pricing cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           <PricingCard
             title="Free"
             price="$0"
@@ -357,14 +365,16 @@ function Pricing() {
             perks={freePerks}
           />
           <PricingCard
-            title="Paid"
+            title="Pro"
             price="$10"
-            note="minimum usage per month"
+            note="minimum per month"
             perks={paidPerks}
+            highlighted
           />
         </div>
 
-        <div className="mt-8">
+        {/* Calculator */}
+        <div className="mt-12">
           <PricingCalculator />
         </div>
       </div>
@@ -377,36 +387,66 @@ type PricingCardProps = {
   price: string;
   note: string;
   perks: string[];
+  highlighted?: boolean;
 };
 
-function PricingCard({ title, price, note, perks }: PricingCardProps) {
+function PricingCard({
+  title,
+  price,
+  note,
+  perks,
+  highlighted,
+}: PricingCardProps) {
   return (
-    <div className="rounded-[18px] bg-primary/20 p-1">
-      <div className="h-full rounded-[14px] bg-primary/20 p-0.5 shadow-sm">
-        <div className="bg-background rounded-xl h-full flex flex-col p-5">
-          <h3 className=" font-medium">{title}</h3>
-          <div className="mt-2 text-4xl text-primary">{price}</div>
-          <div className="text-xs text-muted-foreground">{note}</div>
-          <ul className="mt-4 space-y-2 text-sm mb-20">
-            {perks.map((perk) => (
-              <li key={perk} className="flex items-start gap-2">
-                <CheckIcon className="w-4 h-4 mt-0.5 text-primary" />
-                <span>{perk}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-auto pt-6">
-            <Button className="">
-              <a
-                href="https://app.usesend.com"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Get started
-              </a>
-            </Button>
-          </div>
+    <div
+      className={`rounded-2xl p-6 sm:p-8 flex flex-col h-full ${
+        highlighted
+          ? "bg-primary text-primary-foreground"
+          : "bg-card border border-border"
+      }`}>
+      <div>
+        <h3
+          className={`text-lg font-medium ${highlighted ? "text-primary-foreground" : "text-foreground"}`}>
+          {title}
+        </h3>
+        <div className="mt-4">
+          <span
+            className={`text-4xl sm:text-5xl font-serif ${highlighted ? "text-primary-foreground" : "text-foreground"}`}>
+            {price}
+          </span>
+          <span
+            className={`ml-2 text-sm ${highlighted ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+            {note}
+          </span>
         </div>
+      </div>
+
+      <ul className="mt-8 space-y-3 flex-1">
+        {perks.map((perk) => (
+          <li key={perk} className="flex items-start gap-3">
+            <CheckIcon
+              className={`w-5 h-5 mt-0.5 shrink-0 ${highlighted ? "text-primary-foreground" : "text-primary"}`}
+            />
+            <span
+              className={`text-sm ${highlighted ? "text-primary-foreground/90" : "text-foreground"}`}>
+              {perk}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-8">
+        <a href={APP_URL} target="_blank" rel="noopener noreferrer">
+          <Button
+            className={`w-full rounded-full h-11 font-medium ${
+              highlighted
+                ? "bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                : ""
+            }`}
+            variant={highlighted ? "secondary" : "default"}>
+            Get started
+          </Button>
+        </a>
       </div>
     </div>
   );
@@ -414,31 +454,27 @@ function PricingCard({ title, price, note, perks }: PricingCardProps) {
 
 function About() {
   return (
-    <section id="about" className="py-16 sm:py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="text-center">
-          <div className="mb-2 text-sm uppercase tracking-wider text-primary">
-            About
-          </div>
-        </div>
+    <section id="about" className="py-20 sm:py-28">
+      <div className="mx-auto max-w-3xl px-6 text-center">
+        <p className="section-label mb-3">About</p>
+        <h2 className="text-3xl sm:text-4xl font-serif text-foreground mb-8">
+          Built for developers, by developers
+        </h2>
 
-        <div className="mt-8 max-w-3xl mx-auto text-sm sm:text-base space-y-4">
+        <div className="space-y-4 text-muted-foreground leading-relaxed">
           <p>
-            As most of email products out there, useSend also uses Amazon SES
-            under the hood to send emails. We provide an open and alternative
-            way to send emails reliably and cheaply with a great dashboard.
-          </p>
-          <p>
-            useSend is bootstrapped and funded by the cloud offering and
-            sponsors. If you self host useSend, please consider{" "}
+            Sendo is an email marketing platform created on top of open source
+            platform{" "}
             <a
-              href="https://github.com/sponsors/KMKoushik"
+              href="https://github.com/usesend/useSend/"
               target="_blank"
-              className="text-primary-light"
-            >
-              sponsoring us
+              className="underline"
+              rel="noopener noreferrer">
+              useSend
             </a>
-            .
+            . <br /> Storing a few contacts in a database shouldn't cost a
+            fortune. Sendo give developers and startups an affordable
+            alternative to traditional email service providers.
           </p>
         </div>
       </div>
@@ -446,11 +482,6 @@ function About() {
   );
 }
 
-// FAQ section removed per request
-
-// Footer moved to ~/components/SiteFooter
-
-// Minimal inline icons (stroke-based, sleek)
 function CheckIcon({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -460,8 +491,7 @@ function CheckIcon({ className = "" }: { className?: string }) {
       stroke="currentColor"
       strokeWidth="2"
       className={className}
-      aria-hidden="true"
-    >
+      aria-hidden="true">
       <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );

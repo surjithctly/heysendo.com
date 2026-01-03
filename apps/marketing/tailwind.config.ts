@@ -9,5 +9,20 @@ export default {
     `${path.join(require.resolve("@usesend/ui"), "..")}/**/*.{ts,tsx}`,
     `${path.join(require.resolve("@usesend/email-editor"), "..")}/**/*.{ts,tsx}`,
   ],
+  theme: {
+    ...sharedConfig.theme,
+    extend: {
+      ...sharedConfig.theme?.extend,
+      fontFamily: {
+        ...sharedConfig.theme?.fontFamily,
+        serif: [
+          "var(--font-serif)",
+          "Instrument Serif",
+          "Georgia",
+          "Times New Roman",
+          "serif",
+        ],
+      },
+    },
+  },
 } satisfies Config;
-

@@ -8,14 +8,14 @@ const REVALIDATE_SECONDS = 60 * 60 * 24 * 7; // 7 days
 function formatCompact(n: number): string {
   if (n < 1000) return n.toLocaleString();
   const units = [
-    { v: 1_000_000_000, s: " B" },
-    { v: 1_000_000, s: " M" },
-    { v: 1_000, s: " K" },
+    { v: 1_000_000_000, s: "B" },
+    { v: 1_000_000, s: "M" },
+    { v: 1_000, s: "K" },
   ];
   for (const u of units) {
     if (n >= u.v) {
       const num = n / u.v;
-      const rounded = Math.round(num * 10) / 10; // 1 decimal
+      const rounded = Math.round(num * 10) / 10;
       const str = rounded.toFixed(1).replace(/\.0$/, "");
       return str + u.s;
     }
@@ -50,21 +50,24 @@ export async function GitHubStarsButton() {
   const formatted = stars == null ? "—" : formatCompact(stars);
 
   return (
-    <Button variant="outline" size="lg" className="px-4 gap-2">
-      <a
-        href={REPO_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Star this repo on GitHub"
-        className="flex items-center gap-2"
+    <a
+      href={REPO_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Star this repo on GitHub"
+    >
+      <Button
+        variant="outline"
+        size="lg"
+        className="px-6 h-12 rounded-full gap-2.5 border-border hover:border-primary/50 hover:bg-accent"
       >
-        <GitHubIcon className="h-4 w-4" />
-        <span>GitHub</span>
-        <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground">
+        <GitHubIcon className="h-5 w-5" />
+        <span className="font-medium">Star on GitHub</span>
+        <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
           {formatted}
         </span>
-      </a>
-    </Button>
+      </Button>
+    </a>
   );
 }
 
