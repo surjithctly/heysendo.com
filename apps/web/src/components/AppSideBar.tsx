@@ -129,8 +129,8 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarGroupLabel>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold text-foreground font-mono">
-              useSend
+            <span className="text-lg font-semibold text-foreground font-sans">
+              Sendo
             </span>
             <Badge variant="outline">Beta</Badge>
           </div>
@@ -250,7 +250,7 @@ export function AppSidebar() {
             ) : null}
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Docs">
-                <Link href="https://docs.usesend.com" target="_blank">
+                <Link href="https://docs.heysendo.com" target="_blank">
                   <BookOpenText />
                   <span>Docs</span>
                 </Link>
