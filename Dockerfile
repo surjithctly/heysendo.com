@@ -117,4 +117,4 @@ COPY --from=smtp-installer /app/apps/smtp-server/package.json ./
 COPY --from=smtp-installer /app/node_modules /app/node_modules
 ENV NODE_ENV=production
 EXPOSE 2525 3000
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/server.js"]
