@@ -34,9 +34,9 @@ services:
     image: minio/minio
     container_name: heysendo-storage
     restart: always
-    expose:
-      - "9002"
-      - "9001"
+    ports:
+      - "9002:9002"
+      - "9001:9001"
     volumes:
       - storage:/data
     environment:
@@ -44,6 +44,8 @@ services:
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     entrypoint: sh
     command: -c 'mkdir -p /data/${S3_BUCKET_NAME} && minio server /data --console-address ":9001" --address ":9002"'
+    labels:
+      - "coolify.managed=true"
 
   # Disable SMTP for now. Enable Later
   # smtp:
@@ -78,12 +80,11 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379
       - STORAGE_TYPE=s3
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
-      - S3_REGION=${S3_REGION:-us-east-1}
-      - S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
-      - S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
-      - S3_ENDPOINT=http://minio:9002
-      - S3_FORCE_PATH_STYLE=true
+      - S3_COMPATIBLE_ACCESS_KEY=${MINIO_ROOT_USER}
+      - S3_COMPATIBLE_SECRET_KEY=${MINIO_ROOT_PASSWORD}
+      - S3_COMPATIBLE_API_URL=http://minio:9002
+      - S3_COMPATIBLE_PUBLIC_URL=${SERVICE_FQDN_MINIO}/${S3_BUCKET_NAME}
+      - S3_COMPATIBLE_BUCKET=${S3_BUCKET_NAME}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXT_PUBLIC_APP_URL}
       - GITHUB_ID=${GITHUB_ID}

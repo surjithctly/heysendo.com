@@ -56,7 +56,7 @@ import { env } from "~/env";
 // General items
 const generalItems = [
   {
-    title: "Analytics",
+    title: "Dashboard",
     url: "/dashboard",
     icon: BarChart3,
   },
@@ -150,8 +150,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       tooltip={item.title}
-                      isActive={isActive}
-                    >
+                      isActive={isActive}>
                       <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
@@ -177,8 +176,7 @@ export function AppSidebar() {
                       asChild
                       tooltip={item.title}
                       isActive={isActive}
-                      className="text-sidebar-foreground"
-                    >
+                      className="text-sidebar-foreground">
                       <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
@@ -219,8 +217,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       tooltip={item.title}
-                      isActive={isActive}
-                    >
+                      isActive={isActive}>
                       <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
@@ -292,8 +289,7 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">
                 {user.avatar ? (
                   <AvatarImage
@@ -319,8 +315,7 @@ export function NavUser({
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl"
             side={isMobile ? "bottom" : "top"}
-            sideOffset={4}
-          >
+            sideOffset={4}>
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
