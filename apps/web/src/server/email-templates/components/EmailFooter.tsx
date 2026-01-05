@@ -7,16 +7,15 @@ interface EmailFooterProps {
 }
 
 export function EmailFooter({
-  companyName = "useSend",
-  supportUrl = "mailto:hey@usesend.com",
+  companyName = "Sendo",
+  supportUrl = "mailto:support@heysendo.com",
 }: EmailFooterProps) {
   return (
     <Container
       style={{
         padding: "20px 0",
         backgroundColor: "#ffffff",
-      }}
-    >
+      }}>
       <Text
         style={{
           fontSize: "14px",
@@ -24,16 +23,14 @@ export function EmailFooter({
           textAlign: "left" as const,
           margin: "0",
           lineHeight: "1.5",
-        }}
-      >
+        }}>
         This email was sent by {companyName}. If you have any questions, please{" "}
         <a
           href={supportUrl}
           style={{
             color: "#000000",
             textDecoration: "underline",
-          }}
-        >
+          }}>
           contact our support team
         </a>
         .

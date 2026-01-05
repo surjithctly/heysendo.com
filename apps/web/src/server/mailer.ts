@@ -28,7 +28,7 @@ export async function sendSignUpEmail(
     return;
   }
 
-  const subject = "Sign in to useSend";
+  const subject = "Sign in to Sendo";
 
   // Use jsx-email template for beautiful HTML
   const html = await renderOtpEmail({
@@ -38,7 +38,7 @@ export async function sendSignUpEmail(
   });
 
   // Fallback text version
-  const text = `Hey,\n\nYou can sign in to useSend by clicking the below URL:\n${url}\n\nYou can also use this OTP: ${token}\n\nThanks,\nuseSend Team`;
+  const text = `Hey,\n\nYou can sign in to Sendo by clicking the below URL:\n${url}\n\nYou can also use this OTP: ${token}\n\nThanks,\nSendo Team`;
 
   await sendMail(email, subject, text, html);
 }
@@ -55,7 +55,7 @@ export async function sendTeamInviteEmail(
     return;
   }
 
-  const subject = "You have been invited to join useSend";
+  const subject = "You have been invited to join Sendo";
 
   // Use jsx-email template for beautiful HTML
   const html = await renderTeamInviteEmail({
@@ -64,7 +64,7 @@ export async function sendTeamInviteEmail(
   });
 
   // Fallback text version
-  const text = `Hey,\n\nYou have been invited to join the team ${teamName} on useSend.\n\nYou can accept the invitation by clicking the below URL:\n${url}\n\nThanks,\nuseSend Team`;
+  const text = `Hey,\n\nYou have been invited to join the team ${teamName} on Sendo.\n\nYou can accept the invitation by clicking the below URL:\n${url}\n\nThanks,\nSendo Team`;
 
   await sendMail(email, subject, text, html);
 }
@@ -75,8 +75,8 @@ export async function sendSubscriptionConfirmationEmail(email: string) {
     return;
   }
 
-  const subject = "Thanks for subscribing to useSend";
-  const text = `Hey,\n\nThanks for subscribing to useSend, just wanted to let you know you can join the discord server to have a dedicated support channel for your team. So that we can address your queries / bugs asap.\n\nYou can join over using the link: https://discord.com/invite/BU8n8pJv8S\n\nIf you prefer slack, please let me know\n\ncheers,\nkoushik - useSend`;
+  const subject = "Thanks for subscribing to Sendo";
+  const text = `Hey,\n\nThanks for subscribing to Sendo, just wanted to let you know you can join the discord server to have a dedicated support channel for your team. So that we can address your queries / bugs asap.\n\nYou can join over using the link: https://heysendo.com/discord\n\nIf you prefer telegram, please let me know\n\ncheers,\nSendo`;
   const html = text.replace(/\n/g, "<br />");
 
   await sendMail(email, subject, text, html, undefined, env.FOUNDER_EMAIL);
@@ -92,7 +92,7 @@ export async function sendMail(
 ) {
   if (isSelfHosted()) {
     logger.info("Sending email using self hosted");
-    /* 
+    /*
       Self hosted so checking if we can send using one of the available domain
       Assuming self hosted will have only one team
       TODO: fix this
@@ -113,9 +113,11 @@ export async function sendMail(
     const availableDomains = domains.map((d) => d.name);
     const domain = domains[0];
 
-    const candidateFroms = [fromOverride, env.FROM_EMAIL, `hello@${domain.name}`].filter(
-      (value): value is string => Boolean(value)
-    );
+    const candidateFroms = [
+      fromOverride,
+      env.FROM_EMAIL,
+      `hello@${domain.name}`,
+    ].filter((value): value is string => Boolean(value));
 
     const selectedFrom =
       candidateFroms.find((address) => {
@@ -153,6 +155,6 @@ export async function sendMail(
       );
     }
   } else {
-    throw new Error("USESEND_API_KEY/UNSEND_API_KEY not found");
+    throw new Error("SENDO_API_KEY/SENDO_API_KEY not found");
   }
 }

@@ -40,8 +40,7 @@ function FreePlanUsage({
           {usage?.map((item) => (
             <div
               key={item.type}
-              className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0"
-            >
+              className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0">
               <div>
                 <div className="font-medium capitalize">
                   {item.type.toLowerCase()}
@@ -49,7 +48,7 @@ function FreePlanUsage({
                 <div className="text-sm text-muted-foreground mt-1">
                   {item.type === "TRANSACTIONAL"
                     ? "Mails sent using the send api or SMTP"
-                    : "Mails designed sent from useSend editor"}
+                    : "Mails designed sent from Sendo editor"}
                 </div>
               </div>
               <div className="font-mono font-medium">
@@ -132,8 +131,7 @@ function PaidPlanUsage({
           {usage?.map((item) => (
             <div
               key={item.type}
-              className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0"
-            >
+              className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0">
               <div>
                 <div className="font-medium capitalize">
                   {item.type.toLowerCase()}
