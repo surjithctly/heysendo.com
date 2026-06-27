@@ -1,4 +1,4 @@
-import "@usesend/ui/styles/globals.css";
+import "./globals.css";
 import "./marketing.css";
 
 import { Inter, Instrument_Serif, JetBrains_Mono } from "next/font/google";

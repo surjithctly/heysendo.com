@@ -17,6 +17,7 @@ import {
   UsersIcon,
   GaugeIcon,
   UserRoundX,
+  Webhook,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 
@@ -97,6 +98,11 @@ const settingsItems = [
     title: "Domains",
     url: "/domains",
     icon: Globe,
+  },
+  {
+    title: "Webhooks",
+    url: "/webhooks",
+    icon: Webhook,
   },
   {
     title: "Developer settings",
@@ -313,7 +319,7 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl"
+            className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-56 rounded-xl"
             side={isMobile ? "bottom" : "top"}
             sideOffset={4}>
             <DropdownMenuLabel className="p-0 font-normal">

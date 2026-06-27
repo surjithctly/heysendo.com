@@ -84,6 +84,12 @@ else:
     print("ok:", raw)
 ```
 
+## Webhook Local Example
+
+For a runnable webhook verification demo project, see:
+
+- `example/webhook-test-project/README.md`
+
 ## Development
 
 This package is managed with Poetry. Models are maintained in-repo under
@@ -94,7 +100,8 @@ It is published as `usesend` on PyPI.
 ## Available Resources
 
 - **Emails**: `client.emails.send()`, `client.emails.get()`
-- **Contacts**: `client.contacts.create()`, `client.contacts.get()`, `client.contacts.list()`
+- **ContactBooks**: `client.contact_books.list()`, `client.contact_books.create()`, `client.contact_books.get()`, `client.contact_books.update()`
+- **Contacts**: `client.contacts.create()`, `client.contacts.list()`, `client.contacts.get()`, `client.contacts.bulk_create()`, `client.contacts.bulk_delete()`
 - **Domains**: `client.domains.create()`, `client.domains.get()`, `client.domains.verify()`
 - **Campaigns**: `client.campaigns.create()`, `client.campaigns.get()`, `client.campaigns.schedule()`, `client.campaigns.pause()`, `client.campaigns.resume()`
 

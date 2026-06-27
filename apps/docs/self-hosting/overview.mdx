@@ -21,8 +21,8 @@ useSend depends on AWS SES to send emails and SNS to receive email status. Along
 Add the following environment variables.
 
     ```env
-    AWS_ACCESS_KEY=<access-key-id>
-    AWS_SECRET_KEY=<secret-access-key>
+    AWS_ACCESS_KEY_ID=<access-key-id>
+    AWS_SECRET_ACCESS_KEY=<secret-access-key>
     ```
 
 <Tip>
@@ -58,6 +58,8 @@ If you're using docker-compose, it's all automatically done for you.
 DATABASE_URL="postgres://<username>:<password>@<host>:<port>/<database-name>"
 REDIS_URL="redis://<username>:<password>@<host>:<port>"
 ```
+
+If you're sharing a Redis instance across multiple apps and using Redis ACL for isolation, set `REDIS_KEY_PREFIX` to namespace all keys (e.g. `REDIS_KEY_PREFIX="usesend"` prefixes all keys with `usesend:`).
 
   </Step>
   <Step title="Next auth url and secret">

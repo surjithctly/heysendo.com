@@ -10,7 +10,7 @@ import {
 } from "@prisma/client";
 import { EmailQueueService } from "./email-queue-service";
 import { Queue, Worker } from "bullmq";
-import { getRedis } from "../redis";
+import { getRedis, BULL_PREFIX } from "../redis";
 import {
   CAMPAIGN_BATCH_QUEUE,
   DEFAULT_QUEUE_OPTIONS,
@@ -23,6 +23,12 @@ import {
   validateApiKeyDomainAccess,
   validateDomainFromEmail,
 } from "./domain-service";
+import {
+  BUILT_IN_CONTACT_VARIABLES,
+  createCaseInsensitiveVariableValues,
+  getContactReplacementValue,
+  replaceContactVariables,
+} from "../utils/contact-variable-replacement";
 
 const CAMPAIGN_UNSUB_PLACEHOLDER_TOKENS = [
   "{{unsend_unsubscribe_url}}",
@@ -35,14 +41,11 @@ const CAMPAIGN_UNSUB_PLACEHOLDER_REGEXES =
     return new RegExp(`\\{\\{\\s*${inner}\\s*\\}}`, "i");
   });
 
-const CONTACT_VARIABLE_REGEX =
-  /\{\{\s*(?:contact\.)?(email|firstName|lastName)(?:,fallback=([^}]+))?\s*\}\}/gi;
-
 function campaignHasUnsubscribePlaceholder(
   ...sources: Array<string | null | undefined>
 ) {
   return CAMPAIGN_UNSUB_PLACEHOLDER_REGEXES.some((regex) =>
-    sources.some((source) => (source ? regex.test(source) : false))
+    sources.some((source) => (source ? regex.test(source) : false)),
   );
 }
 
@@ -50,28 +53,6 @@ function replaceUnsubscribePlaceholders(html: string, url: string) {
   return CAMPAIGN_UNSUB_PLACEHOLDER_REGEXES.reduce((acc, regex) => {
     return acc.replace(new RegExp(regex.source, "gi"), url);
   }, html);
-}
-
-function replaceContactVariables(html: string, contact: Contact) {
-  return html.replace(
-    CONTACT_VARIABLE_REGEX,
-    (_, key: string, fallback?: string) => {
-      const valueMap: Record<string, string | null | undefined> = {
-        email: contact.email,
-        firstname: contact.firstName,
-        lastname: contact.lastName,
-      };
-
-      const normalizedKey = key.toLowerCase();
-      const contactValue = valueMap[normalizedKey];
-
-      if (contactValue && contactValue.length > 0) {
-        return contactValue;
-      }
-
-      return fallback ?? "";
-    }
-  );
 }
 
 function sanitizeAddressList(addresses?: string | string[]) {
@@ -87,7 +68,7 @@ function sanitizeAddressList(addresses?: string | string[]) {
 }
 
 async function prepareCampaignHtml(
-  campaign: Campaign
+  campaign: Campaign,
 ): Promise<{ campaign: Campaign; html: string }> {
   if (campaign.content) {
     try {
@@ -120,10 +101,12 @@ async function renderCampaignHtmlForContact({
   campaign,
   contact,
   unsubscribeUrl,
+  allowedVariables,
 }: {
   campaign: Campaign;
   contact: Contact;
   unsubscribeUrl: string;
+  allowedVariables: string[];
 }) {
   if (campaign.content) {
     try {
@@ -135,13 +118,31 @@ async function renderCampaignHtmlForContact({
         linkValues[token] = unsubscribeUrl;
       }
 
+      const variableValues = createCaseInsensitiveVariableValues({
+        email: contact.email,
+        firstName: contact.firstName,
+        lastName: contact.lastName,
+        ...allowedVariables.reduce(
+          (acc, variable) => {
+            const value = getContactReplacementValue({
+              contact,
+              key: variable,
+              allowedVariables,
+            });
+
+            if (value !== undefined) {
+              acc[variable] = value;
+            }
+
+            return acc;
+          },
+          {} as Record<string, string | null | undefined>,
+        ),
+      });
+
       return renderer.render({
         shouldReplaceVariableValues: true,
-        variableValues: {
-          email: contact.email,
-          firstName: contact.firstName,
-          lastName: contact.lastName,
-        },
+        variableValues,
         linkValues,
       });
     } catch (error) {
@@ -155,7 +156,7 @@ async function renderCampaignHtmlForContact({
   }
 
   let html = replaceUnsubscribePlaceholders(campaign.html, unsubscribeUrl);
-  html = replaceContactVariables(html, contact);
+  html = replaceContactVariables(html, contact, allowedVariables);
 
   return html;
 }
@@ -245,7 +246,7 @@ export async function createCampaignFromApi({
 
   const unsubPlaceholderFound = campaignHasUnsubscribePlaceholder(
     sanitizedContent,
-    sanitizedHtml
+    sanitizedHtml,
   );
 
   if (!unsubPlaceholderFound) {
@@ -351,7 +352,7 @@ export async function sendCampaign(id: string) {
 
   const unsubPlaceholderFound = campaignHasUnsubscribePlaceholder(
     campaign.content,
-    html
+    html,
   );
 
   if (!unsubPlaceholderFound) {
@@ -430,7 +431,7 @@ export async function scheduleCampaign({
 
   const unsubPlaceholderFound = campaignHasUnsubscribePlaceholder(
     campaign.content,
-    html
+    html,
   );
   if (!unsubPlaceholderFound) {
     throw new UnsendApiError({
@@ -669,7 +670,18 @@ export async function subscribeContact(id: string, hash: string) {
   }
 }
 
-export async function deleteCampaign(id: string) {
+export async function deleteCampaign(id: string, teamId: number) {
+  const existing = await db.campaign.findFirst({
+    where: { id, teamId },
+  });
+
+  if (!existing) {
+    throw new UnsendApiError({
+      code: "NOT_FOUND",
+      message: "Campaign not found",
+    });
+  }
+
   const campaign = await db.$transaction(async (tx) => {
     await tx.campaignEmail.deleteMany({
       where: { campaignId: id },
@@ -688,6 +700,7 @@ export async function deleteCampaign(id: string) {
 type CampaignEmailJob = {
   contact: Contact;
   campaign: Campaign;
+  allowedVariables: string[];
   emailConfig: {
     from: string;
     subject: string;
@@ -703,12 +716,12 @@ type CampaignEmailJob = {
 };
 
 async function processContactEmail(jobData: CampaignEmailJob) {
-  const { contact, campaign, emailConfig } = jobData;
+  const { contact, campaign, emailConfig, allowedVariables } = jobData;
 
   const unsubscribeUrl = createUnsubUrl(contact.id, emailConfig.campaignId);
   const oneClickUnsubUrl = createOneClickUnsubUrl(
     contact.id,
-    emailConfig.campaignId
+    emailConfig.campaignId,
   );
 
   // Check for suppressed emails before processing
@@ -723,18 +736,18 @@ async function processContactEmail(jobData: CampaignEmailJob) {
 
   const suppressionResults = await SuppressionService.checkMultipleEmails(
     allEmailsToCheck,
-    emailConfig.teamId
+    emailConfig.teamId,
   );
 
   // Filter each field separately
   const filteredToEmails = toEmails.filter(
-    (email) => !suppressionResults[email]
+    (email) => !suppressionResults[email],
   );
   const filteredCcEmails = ccEmails.filter(
-    (email) => !suppressionResults[email]
+    (email) => !suppressionResults[email],
   );
   const filteredBccEmails = bccEmails.filter(
-    (email) => !suppressionResults[email]
+    (email) => !suppressionResults[email],
   );
 
   // Check if the contact's email (TO recipient) is suppressed
@@ -744,7 +757,13 @@ async function processContactEmail(jobData: CampaignEmailJob) {
     campaign,
     contact,
     unsubscribeUrl,
+    allowedVariables,
   });
+  const subject = replaceContactVariables(
+    emailConfig.subject,
+    contact,
+    allowedVariables,
+  );
 
   if (isContactSuppressed) {
     // Create suppressed email record
@@ -754,7 +773,7 @@ async function processContactEmail(jobData: CampaignEmailJob) {
         campaignId: emailConfig.campaignId,
         teamId: emailConfig.teamId,
       },
-      "Contact email is suppressed. Creating suppressed email record."
+      "Contact email is suppressed. Creating suppressed email record.",
     );
 
     const email = await db.email.create({
@@ -764,7 +783,7 @@ async function processContactEmail(jobData: CampaignEmailJob) {
         cc: ccEmails.length > 0 ? ccEmails : undefined,
         bcc: bccEmails.length > 0 ? bccEmails : undefined,
         from: emailConfig.from,
-        subject: emailConfig.subject,
+        subject,
         html,
         text: emailConfig.previewText,
         teamId: emailConfig.teamId,
@@ -810,7 +829,7 @@ async function processContactEmail(jobData: CampaignEmailJob) {
         campaignId: emailConfig.campaignId,
         teamId: emailConfig.teamId,
       },
-      "Some CC recipients were suppressed and filtered out from campaign email."
+      "Some CC recipients were suppressed and filtered out from campaign email.",
     );
   }
 
@@ -822,7 +841,7 @@ async function processContactEmail(jobData: CampaignEmailJob) {
         campaignId: emailConfig.campaignId,
         teamId: emailConfig.teamId,
       },
-      "Some BCC recipients were suppressed and filtered out from campaign email."
+      "Some BCC recipients were suppressed and filtered out from campaign email.",
     );
   }
 
@@ -834,7 +853,7 @@ async function processContactEmail(jobData: CampaignEmailJob) {
       cc: filteredCcEmails.length > 0 ? filteredCcEmails : undefined,
       bcc: filteredBccEmails.length > 0 ? filteredBccEmails : undefined,
       from: emailConfig.from,
-      subject: emailConfig.subject,
+      subject,
       html,
       text: emailConfig.previewText,
       teamId: emailConfig.teamId,
@@ -855,7 +874,7 @@ async function processContactEmail(jobData: CampaignEmailJob) {
   } catch (error) {
     logger.error(
       { err: error },
-      "Failed to create campaign email record so skipping email sending"
+      "Failed to create campaign email record so skipping email sending",
     );
     return;
   }
@@ -866,14 +885,14 @@ async function processContactEmail(jobData: CampaignEmailJob) {
     emailConfig.teamId,
     emailConfig.region,
     false,
-    oneClickUnsubUrl
+    oneClickUnsubUrl,
   );
 }
 
 export async function updateCampaignAnalytics(
   campaignId: string,
   emailStatus: EmailStatus,
-  hardBounce: boolean = false
+  hardBounce: boolean = false,
 ) {
   const campaign = await db.campaign.findUnique({
     where: { id: campaignId },
@@ -928,7 +947,9 @@ export class CampaignBatchService {
     CAMPAIGN_BATCH_QUEUE,
     {
       connection: getRedis(),
-    }
+      prefix: BULL_PREFIX,
+      skipVersionCheck: true,
+    },
   );
 
   static worker = new Worker(
@@ -974,6 +995,16 @@ export class CampaignBatchService {
 
       const contacts = await db.contact.findMany({ where, ...pagination });
 
+      const contactBook = await db.contactBook.findUnique({
+        where: { id: campaign.contactBookId },
+        select: { variables: true },
+      });
+
+      const allowedVariables = [
+        ...BUILT_IN_CONTACT_VARIABLES,
+        ...(contactBook?.variables ?? []),
+      ];
+
       if (contacts.length === 0) {
         // No more contacts -> mark SENT
         await db.campaign.update({
@@ -1006,6 +1037,7 @@ export class CampaignBatchService {
         await processContactEmail({
           contact,
           campaign,
+          allowedVariables,
           emailConfig: {
             from: campaign.from,
             subject: campaign.subject,
@@ -1028,7 +1060,12 @@ export class CampaignBatchService {
         data: { lastCursor: newCursor, lastSentAt: new Date() },
       });
     }),
-    { connection: getRedis(), concurrency: 20 }
+    {
+      connection: getRedis(),
+      concurrency: 20,
+      prefix: BULL_PREFIX,
+      skipVersionCheck: true,
+    },
   );
 
   static async queueBatch({
@@ -1053,7 +1090,7 @@ export class CampaignBatchService {
         if (elapsedMs < windowMs) {
           logger.debug(
             { campaignId, remainingMs: windowMs - elapsedMs },
-            "Defensive skip enqueue; window not elapsed"
+            "Defensive skip enqueue; window not elapsed",
           );
           return;
         }
@@ -1061,14 +1098,14 @@ export class CampaignBatchService {
     } catch (err) {
       logger.warn(
         { err, campaignId },
-        "Failed defensive window check; proceeding to enqueue"
+        "Failed defensive window check; proceeding to enqueue",
       );
     }
 
     await this.batchQueue.add(
       `campaign-${campaignId}`,
       { campaignId, teamId },
-      { jobId: `campaign-batch:${campaignId}`, ...DEFAULT_QUEUE_OPTIONS }
+      { jobId: `campaign-batch:${campaignId}`, ...DEFAULT_QUEUE_OPTIONS },
     );
   }
 }

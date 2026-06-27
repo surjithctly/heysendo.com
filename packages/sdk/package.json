@@ -1,15 +1,19 @@
 {
   "name": "usesend-js",
-  "version": "1.5.7",
+  "version": "1.6.3",
   "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usesend/useSend"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --max-warnings 0",
-    "build": "rm -rf dist && tsup index.ts --format esm,cjs --dts",
-    "publish-sdk": "pnpm run build && pnpm publish --no-git-checks",
+    "build": "tsup",
+    "publish-sdk": "pnpm run build && npm publish --access public --no-git-checks",
     "openapi-typegen": "openapi-typescript ../../apps/docs/api-reference/openapi.json -o types/schema.d.ts"
   },
   "keywords": [],
@@ -19,6 +23,7 @@
     "@types/node": "^22.15.2",
     "@types/react": "^19.1.2",
     "@usesend/eslint-config": "workspace:*",
+    "@usesend/lib": "workspace:*",
     "@usesend/typescript-config": "workspace:*",
     "openapi-typescript": "^7.6.1",
     "tsup": "^8.4.0",

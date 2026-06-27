@@ -12,7 +12,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,31 +19,67 @@ import {
 } from "@usesend/ui/src/form";
 
 import { api } from "~/trpc/react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Edit } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@usesend/ui/src/toaster";
 import { Switch } from "@usesend/ui/src/switch";
 import { Contact } from "@prisma/client";
+import {
+  getContactPropertyValue,
+  replaceContactVariableValues,
+} from "~/lib/contact-properties";
 
 const contactSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  properties: z.record(z.string()).optional(),
   subscribed: z.boolean().optional(),
 });
 
 export const EditContact: React.FC<{
   contact: Partial<Contact> & { id: string; contactBookId: string };
-}> = ({ contact }) => {
+  contactBookVariables?: string[];
+}> = ({ contact, contactBookVariables }) => {
   const [open, setOpen] = useState(false);
   const updateContactMutation = api.contacts.updateContact.useMutation();
+  const initialVariableValues = useMemo(() => {
+    const contactProperties =
+      contact.properties && typeof contact.properties === "object"
+        ? (contact.properties as Record<string, unknown>)
+        : {};
+
+    return (contactBookVariables ?? []).reduce(
+      (acc, variable) => {
+        acc[variable] =
+          getContactPropertyValue(
+            contactProperties,
+            variable,
+            contactBookVariables ?? [],
+          ) ?? "";
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  }, [contact.properties, contactBookVariables]);
+  const [variableValues, setVariableValues] = useState(initialVariableValues);
+
+  useEffect(() => {
+    setVariableValues((prev) =>
+      Object.keys(initialVariableValues).reduce(
+        (acc, key) => {
+          acc[key] = prev[key] ?? initialVariableValues[key] ?? "";
+          return acc;
+        },
+        {} as Record<string, string>,
+      ),
+    );
+  }, [initialVariableValues]);
 
   const utils = api.useUtils();
-  const router = useRouter();
 
   const contactForm = useForm<z.infer<typeof contactSchema>>({
     resolver: zodResolver(contactSchema),
@@ -57,11 +92,21 @@ export const EditContact: React.FC<{
   });
 
   async function onContactUpdate(values: z.infer<typeof contactSchema>) {
+    const properties: Record<string, string> = Object.fromEntries(
+      Object.entries(variableValues).filter(([, value]) => value.trim()),
+    );
+
     updateContactMutation.mutate(
       {
         contactId: contact.id,
         contactBookId: contact.contactBookId,
         ...values,
+        properties: replaceContactVariableValues(
+          (contact.properties as Record<string, unknown> | null | undefined) ??
+            {},
+          properties,
+          contactBookVariables ?? [],
+        ) as Record<string, string>,
       },
       {
         onSuccess: async () => {
@@ -72,7 +117,7 @@ export const EditContact: React.FC<{
         onError: async (error) => {
           toast.error(error.message);
         },
-      }
+      },
     );
   }
 
@@ -112,7 +157,7 @@ export const EditContact: React.FC<{
               <FormField
                 control={contactForm.control}
                 name="firstName"
-                render={({ field, formState }) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
@@ -124,7 +169,7 @@ export const EditContact: React.FC<{
               <FormField
                 control={contactForm.control}
                 name="lastName"
-                render={({ field, formState }) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
@@ -151,6 +196,28 @@ export const EditContact: React.FC<{
                   </FormItem>
                 )}
               />
+              {(contactBookVariables ?? []).map((variable) => {
+                const variableInputId = `contact-variable-${contact.id}-${variable.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+
+                return (
+                  <FormItem key={variable}>
+                    <FormLabel htmlFor={variableInputId}>{variable}</FormLabel>
+                    <FormControl>
+                      <Input
+                        id={variableInputId}
+                        placeholder={variable}
+                        value={variableValues[variable] ?? ""}
+                        onChange={(e) => {
+                          setVariableValues((prev) => ({
+                            ...prev,
+                            [variable]: e.target.value,
+                          }));
+                        }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                );
+              })}
               <div className="flex justify-end">
                 <Button
                   className=" w-[100px] "

@@ -41,7 +41,8 @@ We are currently in beta!
 - [x] Marketing email
 - [x] SMTP support
 - [x] Schedule API
-- [ ] Webhook support
+- [x] Webhook support
+- [ ] Inbound email
 - [ ] BYO AWS credentials
 
 ## Community and Next Steps 🎯
@@ -122,6 +123,16 @@ We are grateful for the support of our sponsors.
   <img src="https://usesend.com/coderabbit-wordmark.png" alt="coderabbit.ai" style="width:200px;height:100px;">
 </a>
 
+### Bronze Sponsors
+
+<a href="https://sayr.io/?utm_source=useSend.com" target="_blank">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.doras.to/Sayr/Sayr%20white.png" />
+    <source media="(prefers-color-scheme: light)" srcset="https://cdn.doras.to/Sayr/sayr%20black.png" />
+    <img src="https://cdn.doras.to/Sayr/sayr%20black.png" alt="Sayr" style="width:180px;height:auto;">
+  </picture>
+</a>
+
 ### Other Sponsors
 
 <a href="https://doras.to/?utm_source=useSend.com" target="_blank">
@@ -134,4 +145,8 @@ We are grateful for the support of our sponsors.
 
 <a href="https://github.com/miguilimzero" target="_blank">
   <img src="https://avatars.githubusercontent.com/u/35383529?v=4" alt="miguilimzero" style="width:60px;height:60px;">
+</a>
+
+<a href="https://x.com/tebayoso" target="_blank">
+  <img src="https://pbs.twimg.com/profile_images/1931051879007391744/5KhqgxUp_400x400.jpg" alt="tebayoso" style="width:60px;height:60px;">
 </a>

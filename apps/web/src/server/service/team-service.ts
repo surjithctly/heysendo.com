@@ -5,7 +5,7 @@ import { sendMail, sendTeamInviteEmail } from "~/server/mailer";
 import { logger } from "~/server/logger/log";
 import type { Prisma, Team, TeamInvite } from "@prisma/client";
 import { UnsendApiError } from "../public-api/api-error";
-import { getRedis } from "~/server/redis";
+import { getRedis, redisKey } from "~/server/redis";
 import { LimitReason } from "~/lib/constants/plans";
 import { LimitService } from "./limit-service";
 import { renderUsageLimitReachedEmail } from "../email-templates/UsageLimitReachedEmail";
@@ -17,7 +17,7 @@ const TEAM_CACHE_TTL_SECONDS = 120; // 2 minutes
 
 export class TeamService {
   private static cacheKey(teamId: number) {
-    return `team:${teamId}`;
+    return redisKey(`team:${teamId}`);
   }
 
   static async refreshTeamCache(teamId: number): Promise<Team | null> {
@@ -307,10 +307,17 @@ export class TeamService {
     return deleted;
   }
 
-  static async resendTeamInvite(inviteId: string, teamName: string) {
-    const invite = await db.teamInvite.findUnique({
+  static async resendTeamInvite(
+    teamId: number,
+    inviteId: string,
+    teamName: string,
+  ) {
+    const invite = await db.teamInvite.findFirst({
       where: {
-        id: inviteId,
+        teamId,
+        id: {
+          equals: inviteId,
+        },
       },
     });
 
@@ -356,7 +363,7 @@ export class TeamService {
   }
 
   /**
-   * Notify all team users that email limit has been reached, at most once per 6 hours.
+   * Notify all team users that email limit has been reached, at most once per day.
    */
   static async maybeNotifyEmailLimitReached(
     teamId: number,
@@ -389,14 +396,16 @@ export class TeamService {
     }
 
     const redis = getRedis();
-    const cacheKey = `limit:notify:${teamId}:${reason}`;
-    const alreadySent = await redis.get(cacheKey);
-    if (alreadySent) {
+    const cacheKey = redisKey(`limit:notify:${teamId}:${reason}`);
+    // Atomic SET NX to prevent race conditions: only one concurrent caller
+    // can acquire the cooldown key. TTL = 24 hours (one notification per day).
+    const acquired = await redis.set(cacheKey, "1", "EX", 24 * 60 * 60, "NX");
+    if (acquired !== "OK") {
       logger.info(
         { teamId, cacheKey },
         "[TeamService]: Skipping notify — cooldown active",
       );
-      return; // within cooldown window
+      return; // another request already claimed this window
     }
 
     const team = await TeamService.getTeamCached(teamId);
@@ -446,18 +455,11 @@ export class TeamService {
       );
       throw err;
     }
-
-    // Set cooldown for 6 hours
-    await redis.setex(cacheKey, 6 * 60 * 60, "1");
-    logger.info(
-      { teamId, cacheKey },
-      "[TeamService]: Set limit reached notification cooldown",
-    );
   }
 
   /**
    * Notify all team users that they're nearing their email limit.
-   * Rate limited via Redis to avoid spamming; sends at most once per 6 hours per reason.
+   * Rate limited via Redis to avoid spamming; sends at most once per day per reason.
    */
   static async sendWarningEmail(
     teamId: number,
@@ -491,14 +493,16 @@ export class TeamService {
     }
 
     const redis = getRedis();
-    const cacheKey = `limit:warning:${teamId}:${reason}`;
-    const alreadySent = await redis.get(cacheKey);
-    if (alreadySent) {
+    const cacheKey = redisKey(`limit:warning:${teamId}:${reason}`);
+    // Atomic SET NX to prevent race conditions: only one concurrent caller
+    // can acquire the cooldown key. TTL = 24 hours (one notification per day).
+    const acquired = await redis.set(cacheKey, "1", "EX", 24 * 60 * 60, "NX");
+    if (acquired !== "OK") {
       logger.info(
         { teamId, cacheKey },
         "[TeamService]: Skipping warning — cooldown active",
       );
-      return; // within cooldown window
+      return; // another request already claimed this window
     }
 
     const team = await TeamService.getTeamCached(teamId);
@@ -557,13 +561,6 @@ export class TeamService {
       );
       throw err;
     }
-
-    // Set cooldown for 6 hours
-    await redis.setex(cacheKey, 6 * 60 * 60, "1");
-    logger.info(
-      { teamId, cacheKey },
-      "[TeamService]: Set warning notification cooldown",
-    );
   }
 }
 

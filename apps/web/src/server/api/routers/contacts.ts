@@ -1,4 +1,5 @@
 import { CampaignStatus, Prisma } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import {
@@ -20,11 +21,12 @@ export const contactsRouter = createTRPCRouter({
     .input(
       z.object({
         name: z.string(),
+        variables: z.array(z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx: { team }, input }) => {
-      const { name } = input;
-      return contactBookService.createContactBook(team.id, name);
+      const { name, variables } = input;
+      return contactBookService.createContactBook(team.id, name, variables);
     }),
 
   getContactBookDetails: contactBookProcedure.query(
@@ -48,6 +50,11 @@ export const contactsRouter = createTRPCRouter({
         name: z.string().optional(),
         properties: z.record(z.string()).optional(),
         emoji: z.string().optional(),
+        doubleOptInEnabled: z.boolean().optional(),
+        doubleOptInFrom: z.string().nullable().optional(),
+        doubleOptInSubject: z.string().optional(),
+        doubleOptInContent: z.string().optional(),
+        variables: z.array(z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx: { contactBook }, input }) => {
@@ -99,6 +106,7 @@ export const contactsRouter = createTRPCRouter({
           email: true,
           firstName: true,
           lastName: true,
+          properties: true,
           subscribed: true,
           createdAt: true,
           contactBookId: true,
@@ -151,15 +159,94 @@ export const contactsRouter = createTRPCRouter({
         subscribed: z.boolean().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx: { contactBook, team }, input }) => {
       const { contactId, ...contact } = input;
-      return contactService.updateContact(contactId, contact);
+      const updatedContact = await contactService.updateContactInContactBook(
+        contactId,
+        contactBook.id,
+        contact,
+        team.id,
+      );
+
+      if (!updatedContact) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Contact not found",
+        });
+      }
+
+      return updatedContact;
     }),
 
   deleteContact: contactBookProcedure
     .input(z.object({ contactId: z.string() }))
-    .mutation(async ({ input }) => {
-      return contactService.deleteContact(input.contactId);
+    .mutation(async ({ ctx: { contactBook, team }, input }) => {
+      const deletedContact = await contactService.deleteContactInContactBook(
+        input.contactId,
+        contactBook.id,
+        team.id,
+      );
+
+      if (!deletedContact) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Contact not found",
+        });
+      }
+
+      return deletedContact;
+    }),
+
+  bulkDeleteContacts: contactBookProcedure
+    .input(z.object({ contactIds: z.array(z.string()).min(1).max(1000) }))
+    .mutation(async ({ ctx: { contactBook, team }, input }) => {
+      const deletedContacts =
+        await contactService.bulkDeleteContactsInContactBook(
+          input.contactIds,
+          contactBook.id,
+          team.id,
+        );
+
+      return { count: deletedContacts.length };
+    }),
+
+  resendDoubleOptInConfirmation: contactBookProcedure
+    .input(z.object({ contactId: z.string() }))
+    .mutation(async ({ ctx: { contactBook, team }, input }) => {
+      try {
+        const contact =
+          await contactService.resendDoubleOptInConfirmationInContactBook(
+            input.contactId,
+            contactBook.id,
+            team.id,
+          );
+
+        if (!contact) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Contact not found",
+          });
+        }
+
+        return { success: true };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        if (
+          error instanceof Error &&
+          error.message ===
+            "Double opt-in confirmation can only be resent to pending contacts"
+        ) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: error.message,
+          });
+        }
+
+        throw error;
+      }
     }),
 
   exportContacts: contactBookProcedure
@@ -192,6 +279,7 @@ export const contactsRouter = createTRPCRouter({
           email: true,
           firstName: true,
           lastName: true,
+          properties: true,
           subscribed: true,
           unsubscribeReason: true,
           createdAt: true,

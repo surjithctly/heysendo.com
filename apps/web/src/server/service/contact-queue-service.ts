@@ -1,5 +1,5 @@
 import { Queue, Worker } from "bullmq";
-import { getRedis } from "../redis";
+import { getRedis, BULL_PREFIX } from "../redis";
 import {
   DEFAULT_QUEUE_OPTIONS,
   CONTACT_BULK_ADD_QUEUE,
@@ -19,6 +19,8 @@ type ContactJob = TeamJob<ContactJobData>;
 class ContactQueueService {
   public static queue = new Queue<ContactJobData>(CONTACT_BULK_ADD_QUEUE, {
     connection: getRedis(),
+    prefix: BULL_PREFIX,
+    skipVersionCheck: true,
     defaultJobOptions: DEFAULT_QUEUE_OPTIONS,
   });
 
@@ -27,6 +29,8 @@ class ContactQueueService {
     createWorkerHandler(processContactJob),
     {
       connection: getRedis(),
+      prefix: BULL_PREFIX,
+      skipVersionCheck: true,
       concurrency: 20,
     },
   );
@@ -97,7 +101,7 @@ class ContactQueueService {
 }
 
 async function processContactJob(job: ContactJob) {
-  const { contactBookId, contact } = job.data;
+  const { contactBookId, contact, teamId } = job.data;
 
   logger.info(
     { contactEmail: contact.email, contactBookId },
@@ -105,7 +109,7 @@ async function processContactJob(job: ContactJob) {
   );
 
   try {
-    await addOrUpdateContact(contactBookId, contact);
+    await addOrUpdateContact(contactBookId, contact, teamId);
     logger.info(
       { contactEmail: contact.email },
       "[ContactQueueService]: Successfully processed contact job",

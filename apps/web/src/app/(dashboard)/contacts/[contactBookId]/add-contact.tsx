@@ -22,11 +22,11 @@ import {
 import { api } from "~/trpc/react";
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@usesend/ui/src/toaster";
+import type { ReactNode } from "react";
 
 const contactsSchema = z.object({
   contacts: z.string({ required_error: "Contacts are required" }).min(1, {
@@ -36,8 +36,14 @@ const contactsSchema = z.object({
 
 export default function AddContact({
   contactBookId,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   contactBookId: string;
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -51,6 +57,14 @@ export default function AddContact({
   });
 
   const utils = api.useUtils();
+  const dialogTrigger =
+    trigger ??
+    (controlledOpen === undefined ? (
+      <Button>
+        <Plus className="h-4 w-4 mr-1" />
+        Add Contacts
+      </Button>
+    ) : null);
 
   async function onContactsAdd(values: z.infer<typeof contactsSchema>) {
     const contactsArray = values.contacts.split(",").map((email) => ({
@@ -65,27 +79,37 @@ export default function AddContact({
       {
         onSuccess: async () => {
           utils.contacts.contacts.invalidate();
-          setOpen(false);
+          if (controlledOpen === undefined) {
+            setOpen(false);
+          } else {
+            onOpenChange?.(false);
+          }
           toast.success("Contacts queued for processing");
         },
         onError: async (error) => {
           toast.error(error.message);
         },
-      }
+      },
     );
   }
 
   return (
     <Dialog
-      open={open}
-      onOpenChange={(_open) => (_open !== open ? setOpen(_open) : null)}
+      open={controlledOpen ?? open}
+      onOpenChange={(nextOpen) => {
+        if (controlledOpen === undefined) {
+          if (nextOpen !== open) {
+            setOpen(nextOpen);
+          }
+          return;
+        }
+
+        onOpenChange?.(nextOpen);
+      }}
     >
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-1" />
-          Add Contacts
-        </Button>
-      </DialogTrigger>
+      {dialogTrigger ? (
+        <DialogTrigger asChild>{dialogTrigger}</DialogTrigger>
+      ) : null}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add new contacts</DialogTitle>
@@ -105,6 +129,21 @@ export default function AddContact({
                     <FormControl>
                       <Textarea
                         placeholder="email1@example.com, email2@example.com"
+                        onKeyDown={(event) => {
+                          if (
+                            !(event.metaKey || event.ctrlKey) ||
+                            event.key !== "Enter"
+                          ) {
+                            return;
+                          }
+
+                          if (addContactsMutation.isPending) {
+                            return;
+                          }
+
+                          event.preventDefault();
+                          void contactsForm.handleSubmit(onContactsAdd)();
+                        }}
                         {...field}
                       />
                     </FormControl>
@@ -112,7 +151,8 @@ export default function AddContact({
                       <FormMessage />
                     ) : (
                       <FormDescription>
-                        Enter comma-separated email addresses.
+                        Enter comma-separated email addresses. Press Cmd/Ctrl +
+                        Enter to submit.
                       </FormDescription>
                     )}
                   </FormItem>

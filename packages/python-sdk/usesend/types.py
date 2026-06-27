@@ -271,6 +271,65 @@ class EmailCancelResponse(TypedDict, total=False):
 # ---------------------------------------------------------------------------
 
 
+class ContactBookCounts(TypedDict, total=False):
+    contacts: int
+
+
+class ContactBook(TypedDict, total=False):
+    id: str
+    name: str
+    teamId: float
+    properties: Dict[str, str]
+    variables: List[str]
+    emoji: str
+    doubleOptInEnabled: Optional[bool]
+    doubleOptInFrom: Optional[str]
+    doubleOptInSubject: Optional[str]
+    doubleOptInContent: Optional[str]
+    createdAt: str
+    updatedAt: str
+    _count: ContactBookCounts
+
+
+ContactBookList = List[ContactBook]
+
+
+class ContactBookCreate(TypedDict, total=False):
+    name: str
+    emoji: Optional[str]
+    properties: Optional[Dict[str, str]]
+    doubleOptInEnabled: Optional[bool]
+    doubleOptInFrom: Optional[str]
+    doubleOptInSubject: Optional[str]
+    doubleOptInContent: Optional[str]
+    variables: Optional[List[str]]
+
+
+class ContactBookCreateResponse(ContactBook, total=False):
+    pass
+
+
+class ContactBookUpdate(TypedDict, total=False):
+    name: Optional[str]
+    emoji: Optional[str]
+    properties: Optional[Dict[str, str]]
+    doubleOptInEnabled: Optional[bool]
+    doubleOptInFrom: Optional[str]
+    doubleOptInSubject: Optional[str]
+    doubleOptInContent: Optional[str]
+    variables: Optional[List[str]]
+
+
+class ContactBookUpdateResponse(ContactBook, total=False):
+    pass
+
+
+class ContactBookDeleteResponse(TypedDict):
+    id: str
+    success: bool
+    message: str
+
+
 class ContactCreate(TypedDict, total=False):
     email: str
     firstName: Optional[str]
@@ -296,6 +355,23 @@ class ContactListItem(TypedDict, total=False):
 
 
 ContactList = List[ContactListItem]
+
+
+ContactBulkCreate = List[ContactCreate]
+
+
+class ContactBulkCreateResponse(TypedDict):
+    message: str
+    count: float
+
+
+class ContactBulkDelete(TypedDict):
+    contactIds: List[str]
+
+
+class ContactBulkDeleteResponse(TypedDict):
+    success: bool
+    count: float
 
 
 class ContactUpdate(TypedDict, total=False):
@@ -449,3 +525,418 @@ class CampaignActionResponse(TypedDict, total=False):
 class APIError(TypedDict):
     code: str
     message: str
+
+
+# ---------------------------------------------------------------------------
+# Webhook Events
+# ---------------------------------------------------------------------------
+
+# Event type literals
+ContactWebhookEventType = Literal[
+    "contact.created",
+    "contact.updated",
+    "contact.deleted",
+]
+
+DomainWebhookEventType = Literal[
+    "domain.created",
+    "domain.verified",
+    "domain.updated",
+    "domain.deleted",
+]
+
+EmailWebhookEventType = Literal[
+    "email.queued",
+    "email.sent",
+    "email.delivery_delayed",
+    "email.delivered",
+    "email.bounced",
+    "email.rejected",
+    "email.rendering_failure",
+    "email.complained",
+    "email.failed",
+    "email.cancelled",
+    "email.suppressed",
+    "email.opened",
+    "email.clicked",
+]
+
+EmailBaseWebhookEventType = Literal[
+    "email.queued",
+    "email.sent",
+    "email.delivery_delayed",
+    "email.delivered",
+    "email.rejected",
+    "email.rendering_failure",
+    "email.complained",
+    "email.cancelled",
+]
+
+WebhookTestEventType = Literal["webhook.test"]
+
+WebhookEventType = Literal[
+    # Contact events
+    "contact.created",
+    "contact.updated",
+    "contact.deleted",
+    # Domain events
+    "domain.created",
+    "domain.verified",
+    "domain.updated",
+    "domain.deleted",
+    # Email events
+    "email.queued",
+    "email.sent",
+    "email.delivery_delayed",
+    "email.delivered",
+    "email.bounced",
+    "email.rejected",
+    "email.rendering_failure",
+    "email.complained",
+    "email.failed",
+    "email.cancelled",
+    "email.suppressed",
+    "email.opened",
+    "email.clicked",
+    # Test event
+    "webhook.test",
+]
+
+# Email status for webhook payloads
+WebhookEmailStatus = Literal[
+    "QUEUED",
+    "SENT",
+    "DELIVERY_DELAYED",
+    "DELIVERED",
+    "BOUNCED",
+    "REJECTED",
+    "RENDERING_FAILURE",
+    "COMPLAINED",
+    "FAILED",
+    "CANCELLED",
+    "SUPPRESSED",
+    "OPENED",
+    "CLICKED",
+    "SCHEDULED",
+]
+
+
+# Webhook payload types
+class EmailBasePayload(TypedDict, total=False):
+    """Base payload for email webhook events."""
+
+    id: str
+    status: WebhookEmailStatus
+    # Note: 'from' is a reserved keyword, using alternative access
+    to: List[str]
+    occurredAt: str
+    campaignId: Optional[str]
+    contactId: Optional[str]
+    domainId: Optional[int]
+    subject: str
+    templateId: str
+    metadata: Dict[str, Any]
+
+
+# Using functional syntax for 'from' field
+EmailBasePayloadFull = TypedDict(
+    "EmailBasePayloadFull",
+    {
+        "id": str,
+        "status": WebhookEmailStatus,
+        "from": str,
+        "to": List[str],
+        "occurredAt": str,
+        "campaignId": NotRequired[Optional[str]],
+        "contactId": NotRequired[Optional[str]],
+        "domainId": NotRequired[Optional[int]],
+        "subject": NotRequired[str],
+        "templateId": NotRequired[str],
+        "metadata": NotRequired[Dict[str, Any]],
+    },
+)
+
+
+class ContactWebhookPayload(TypedDict, total=False):
+    """Payload for contact webhook events."""
+
+    id: str
+    email: str
+    contactBookId: str
+    subscribed: bool
+    properties: Dict[str, Any]
+    firstName: Optional[str]
+    lastName: Optional[str]
+    createdAt: str
+    updatedAt: str
+
+
+class DomainWebhookPayload(TypedDict, total=False):
+    """Payload for domain webhook events."""
+
+    id: int
+    name: str
+    status: str
+    region: str
+    createdAt: str
+    updatedAt: str
+    clickTracking: bool
+    openTracking: bool
+    subdomain: Optional[str]
+    sesTenantId: Optional[str]
+    dkimStatus: Optional[str]
+    spfDetails: Optional[str]
+    dmarcAdded: Optional[bool]
+
+
+BounceType = Literal["Transient", "Permanent", "Undetermined"]
+BounceSubType = Literal[
+    "General",
+    "NoEmail",
+    "Suppressed",
+    "OnAccountSuppressionList",
+    "MailboxFull",
+    "MessageTooLarge",
+    "ContentRejected",
+    "AttachmentRejected",
+]
+
+
+class BounceDetails(TypedDict, total=False):
+    """Bounce details for email.bounced events."""
+
+    type: BounceType
+    subType: BounceSubType
+    message: str
+
+
+class FailureDetails(TypedDict):
+    """Failure details for email.failed events."""
+
+    reason: str
+
+
+SuppressionType = Literal["Bounce", "Complaint", "Manual"]
+
+
+class SuppressionDetails(TypedDict, total=False):
+    """Suppression details for email.suppressed events."""
+
+    type: SuppressionType
+    reason: str
+    source: str
+
+
+class OpenDetails(TypedDict, total=False):
+    """Open tracking details for email.opened events."""
+
+    timestamp: str
+    userAgent: str
+    ip: str
+    platform: str
+
+
+class ClickDetails(TypedDict, total=False):
+    """Click tracking details for email.clicked events."""
+
+    timestamp: str
+    url: str
+    userAgent: str
+    ip: str
+    platform: str
+
+
+# Extended email payloads with additional details
+EmailBouncedPayload = TypedDict(
+    "EmailBouncedPayload",
+    {
+        "id": str,
+        "status": WebhookEmailStatus,
+        "from": str,
+        "to": List[str],
+        "occurredAt": str,
+        "campaignId": NotRequired[Optional[str]],
+        "contactId": NotRequired[Optional[str]],
+        "domainId": NotRequired[Optional[int]],
+        "subject": NotRequired[str],
+        "templateId": NotRequired[str],
+        "metadata": NotRequired[Dict[str, Any]],
+        "bounce": BounceDetails,
+    },
+)
+
+EmailFailedPayload = TypedDict(
+    "EmailFailedPayload",
+    {
+        "id": str,
+        "status": WebhookEmailStatus,
+        "from": str,
+        "to": List[str],
+        "occurredAt": str,
+        "campaignId": NotRequired[Optional[str]],
+        "contactId": NotRequired[Optional[str]],
+        "domainId": NotRequired[Optional[int]],
+        "subject": NotRequired[str],
+        "templateId": NotRequired[str],
+        "metadata": NotRequired[Dict[str, Any]],
+        "failed": FailureDetails,
+    },
+)
+
+EmailSuppressedPayload = TypedDict(
+    "EmailSuppressedPayload",
+    {
+        "id": str,
+        "status": WebhookEmailStatus,
+        "from": str,
+        "to": List[str],
+        "occurredAt": str,
+        "campaignId": NotRequired[Optional[str]],
+        "contactId": NotRequired[Optional[str]],
+        "domainId": NotRequired[Optional[int]],
+        "subject": NotRequired[str],
+        "templateId": NotRequired[str],
+        "metadata": NotRequired[Dict[str, Any]],
+        "suppression": SuppressionDetails,
+    },
+)
+
+EmailOpenedPayload = TypedDict(
+    "EmailOpenedPayload",
+    {
+        "id": str,
+        "status": WebhookEmailStatus,
+        "from": str,
+        "to": List[str],
+        "occurredAt": str,
+        "campaignId": NotRequired[Optional[str]],
+        "contactId": NotRequired[Optional[str]],
+        "domainId": NotRequired[Optional[int]],
+        "subject": NotRequired[str],
+        "templateId": NotRequired[str],
+        "metadata": NotRequired[Dict[str, Any]],
+        "open": OpenDetails,
+    },
+)
+
+EmailClickedPayload = TypedDict(
+    "EmailClickedPayload",
+    {
+        "id": str,
+        "status": WebhookEmailStatus,
+        "from": str,
+        "to": List[str],
+        "occurredAt": str,
+        "campaignId": NotRequired[Optional[str]],
+        "contactId": NotRequired[Optional[str]],
+        "domainId": NotRequired[Optional[int]],
+        "subject": NotRequired[str],
+        "templateId": NotRequired[str],
+        "metadata": NotRequired[Dict[str, Any]],
+        "click": ClickDetails,
+    },
+)
+
+
+class WebhookTestPayload(TypedDict):
+    """Payload for webhook.test events."""
+
+    test: bool
+    webhookId: str
+    sentAt: str
+
+
+# Webhook event structures
+class EmailWebhookEvent(TypedDict):
+    """Structure for email webhook events."""
+
+    id: str
+    type: EmailBaseWebhookEventType
+    createdAt: str
+    data: EmailBasePayloadFull
+
+
+class EmailBouncedEvent(TypedDict):
+    """Structure for email.bounced webhook events."""
+
+    id: str
+    type: Literal["email.bounced"]
+    createdAt: str
+    data: EmailBouncedPayload
+
+
+class EmailFailedEvent(TypedDict):
+    """Structure for email.failed webhook events."""
+
+    id: str
+    type: Literal["email.failed"]
+    createdAt: str
+    data: EmailFailedPayload
+
+
+class EmailSuppressedEvent(TypedDict):
+    """Structure for email.suppressed webhook events."""
+
+    id: str
+    type: Literal["email.suppressed"]
+    createdAt: str
+    data: EmailSuppressedPayload
+
+
+class EmailOpenedEvent(TypedDict):
+    """Structure for email.opened webhook events."""
+
+    id: str
+    type: Literal["email.opened"]
+    createdAt: str
+    data: EmailOpenedPayload
+
+
+class EmailClickedEvent(TypedDict):
+    """Structure for email.clicked webhook events."""
+
+    id: str
+    type: Literal["email.clicked"]
+    createdAt: str
+    data: EmailClickedPayload
+
+
+class ContactWebhookEvent(TypedDict):
+    """Structure for contact webhook events."""
+
+    id: str
+    type: ContactWebhookEventType
+    createdAt: str
+    data: ContactWebhookPayload
+
+
+class DomainWebhookEvent(TypedDict):
+    """Structure for domain webhook events."""
+
+    id: str
+    type: DomainWebhookEventType
+    createdAt: str
+    data: DomainWebhookPayload
+
+
+class WebhookTestEvent(TypedDict):
+    """Structure for webhook.test events."""
+
+    id: str
+    type: Literal["webhook.test"]
+    createdAt: str
+    data: WebhookTestPayload
+
+
+# Union type for all webhook events
+WebhookEventData = Union[
+    EmailWebhookEvent,
+    EmailBouncedEvent,
+    EmailFailedEvent,
+    EmailSuppressedEvent,
+    EmailOpenedEvent,
+    EmailClickedEvent,
+    ContactWebhookEvent,
+    DomainWebhookEvent,
+    WebhookTestEvent,
+]

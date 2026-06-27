@@ -1,16 +1,19 @@
-import { Job, Queue, Worker } from "bullmq";
+import { Queue, Worker } from "bullmq";
 import { env } from "~/env";
 import { EmailAttachment } from "~/types";
 import { convert as htmlToText } from "html-to-text";
 import { getConfigurationSetName } from "~/utils/ses-utils";
 import { db } from "../db";
 import { sendRawEmail } from "../aws/ses";
-import { getRedis } from "../redis";
+import { getRedis, BULL_PREFIX } from "../redis";
 import { DEFAULT_QUEUE_OPTIONS } from "../queue/queue-constants";
 import { logger } from "../logger/log";
 import { createWorkerHandler, TeamJob } from "../queue/bullmq-context";
 import { LimitService } from "./limit-service";
-import { sanitizeCustomHeaders } from "~/server/utils/email-headers";
+import {
+  BUILT_IN_CONTACT_VARIABLES,
+  replaceContactVariables,
+} from "../utils/contact-variable-replacement";
 // Notifications about limits are handled inside LimitService.
 
 type QueueEmailJob = TeamJob<{
@@ -25,12 +28,14 @@ function createQueueAndWorker(region: string, quota: number, suffix: string) {
 
   const queueName = `${region}-${suffix}`;
 
-  const queue = new Queue(queueName, { connection });
+  const queue = new Queue(queueName, { connection, prefix: BULL_PREFIX, skipVersionCheck: true });
 
   // TODO: Add team context to job data when queueing
   const worker = new Worker(queueName, createWorkerHandler(executeEmail), {
     concurrency: quota,
     connection,
+    prefix: BULL_PREFIX,
+    skipVersionCheck: true,
   });
 
   return { queue, worker };
@@ -358,6 +363,32 @@ async function executeEmail(job: QueueEmailJob) {
     : email.campaignId && email.html
       ? htmlToText(email.html)
       : undefined;
+  let subject = email.subject;
+
+  if (email.campaignId && email.contactId && subject.includes("{{")) {
+    const contact = await db.contact.findUnique({
+      where: { id: email.contactId },
+      include: {
+        contactBook: {
+          select: { variables: true },
+        },
+      },
+    });
+
+    if (contact) {
+      subject = replaceContactVariables(subject, contact, [
+        ...BUILT_IN_CONTACT_VARIABLES,
+        ...contact.contactBook.variables,
+      ]);
+
+      if (subject !== email.subject) {
+        await db.email.update({
+          where: { id: email.id },
+          data: { subject },
+        });
+      }
+    }
+  }
 
   let inReplyToMessageId: string | undefined = undefined;
 
@@ -402,7 +433,7 @@ async function executeEmail(job: QueueEmailJob) {
     const messageId = await sendRawEmail({
       to: email.to,
       from: email.from,
-      subject: email.subject,
+      subject,
       replyTo: email.replyTo ?? undefined,
       bcc: email.bcc,
       cc: email.cc,

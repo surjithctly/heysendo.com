@@ -1,8 +1,11 @@
 import { ErrorResponse } from "../types";
 import { Contacts } from "./contact";
+import { ContactBooks } from "./contactBook";
 import { Emails } from "./email";
 import { Domains } from "./domain";
 import { Campaigns } from "./campaign";
+import { Analytics } from "./analytics";
+import { Webhooks } from "./webhooks";
 
 const defaultBaseUrl = "https://app.usesend.com";
 // eslint-disable-next-line turbo/no-undeclared-env-vars
@@ -19,11 +22,12 @@ type RequestOptions = {
 export class UseSend {
   private readonly baseHeaders: Headers;
 
-  // readonly domains = new Domains(this);
   readonly emails = new Emails(this);
   readonly domains = new Domains(this);
   readonly contacts = new Contacts(this);
+  readonly contactBooks = new ContactBooks(this);
   readonly campaigns = new Campaigns(this);
+  readonly analytics = new Analytics(this);
   url = baseUrl;
 
   constructor(
@@ -170,5 +174,27 @@ export class UseSend {
     }
 
     return this.fetchRequest<T>(path, requestOptions);
+  }
+
+  /**
+   * Creates a webhook handler with the given secret.
+   * Follows the Stripe pattern: `usesend.webhooks(secret).constructEvent(...)`
+   *
+   * @param secret - Webhook signing secret from your UseSend dashboard
+   * @returns Webhooks instance for verifying webhook events
+   *
+   * @example
+   * ```ts
+   * const usesend = new UseSend('us_xxx');
+   * const webhooks = usesend.webhooks('whsec_xxx');
+   *
+   * // In your webhook route
+   * const event = webhooks.constructEvent(req.body, {
+   *   headers: req.headers
+   * });
+   * ```
+   */
+  webhooks(secret: string): Webhooks {
+    return new Webhooks(secret);
   }
 }

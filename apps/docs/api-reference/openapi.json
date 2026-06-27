@@ -1357,6 +1357,682 @@
         }
       }
     },
+    "/v1/contactBooks/{contactBookId}/contacts/bulk": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "example": "cuiwqdj74rygf74"
+            },
+            "required": true,
+            "name": "contactBookId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "email": { "type": "string" },
+                    "firstName": { "type": "string" },
+                    "lastName": { "type": "string" },
+                    "properties": {
+                      "type": "object",
+                      "additionalProperties": { "type": "string" }
+                    },
+                    "subscribed": { "type": "boolean" }
+                  },
+                  "required": ["email"]
+                },
+                "maxItems": 1000
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bulk add contacts to a contact book",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "count": { "type": "number" }
+                  },
+                  "required": ["message", "count"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "example": "cuiwqdj74rygf74"
+            },
+            "required": true,
+            "name": "contactBookId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contactIds": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "minItems": 1,
+                    "maxItems": 1000
+                  }
+                },
+                "required": ["contactIds"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bulk delete contacts from a contact book",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "count": { "type": "number" }
+                  },
+                  "required": ["success", "count"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/contactBooks": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Retrieve contact books accessible by the API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "The ID of the contact book",
+                        "example": "clx1234567890"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the contact book",
+                        "example": "Newsletter Subscribers"
+                      },
+                      "teamId": {
+                        "type": "number",
+                        "description": "The ID of the team",
+                        "example": 1
+                      },
+                      "properties": {
+                        "type": "object",
+                        "additionalProperties": { "type": "string" },
+                        "description": "Custom properties for the contact book",
+                        "example": { "customField1": "value1" }
+                      },
+                      "variables": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Allowed personalization variables for contacts in this book",
+                        "example": ["registrationCode", "company"]
+                      },
+                      "emoji": {
+                        "type": "string",
+                        "description": "The emoji associated with the contact book",
+                        "example": "📙"
+                      },
+                      "doubleOptInEnabled": {
+                        "type": "boolean",
+                        "description": "Whether double opt-in is enabled for new contacts",
+                        "example": true
+                      },
+                      "doubleOptInFrom": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "From address used for double opt-in emails (must use a verified domain)",
+                        "example": "Newsletter <hello@example.com>"
+                      },
+                      "doubleOptInSubject": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Subject line used for double opt-in confirmation email",
+                        "example": "Please confirm your subscription"
+                      },
+                      "doubleOptInContent": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Email editor JSON content used for double opt-in confirmation"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "description": "The creation timestamp"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "description": "The last update timestamp"
+                      },
+                      "_count": {
+                        "type": "object",
+                        "properties": {
+                          "contacts": {
+                            "type": "number",
+                            "description": "The number of contacts in the contact book"
+                          }
+                        },
+                        "required": ["contacts"]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "teamId",
+                      "properties",
+                      "variables",
+                      "emoji",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "emoji": { "type": "string" },
+                  "properties": {
+                    "type": "object",
+                    "additionalProperties": { "type": "string" }
+                  },
+                  "doubleOptInEnabled": { "type": "boolean" },
+                  "doubleOptInFrom": { "type": "string", "nullable": true },
+                  "doubleOptInSubject": { "type": "string" },
+                  "doubleOptInContent": { "type": "string" },
+                  "variables": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Create a new contact book",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The ID of the contact book",
+                      "example": "clx1234567890"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the contact book",
+                      "example": "Newsletter Subscribers"
+                    },
+                    "teamId": {
+                      "type": "number",
+                      "description": "The ID of the team",
+                      "example": 1
+                    },
+                    "properties": {
+                      "type": "object",
+                      "additionalProperties": { "type": "string" },
+                      "description": "Custom properties for the contact book",
+                      "example": { "customField1": "value1" }
+                    },
+                    "variables": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Allowed personalization variables for contacts in this book",
+                      "example": ["registrationCode", "company"]
+                    },
+                    "emoji": {
+                      "type": "string",
+                      "description": "The emoji associated with the contact book",
+                      "example": "📙"
+                    },
+                    "doubleOptInEnabled": {
+                      "type": "boolean",
+                      "description": "Whether double opt-in is enabled for new contacts",
+                      "example": true
+                    },
+                    "doubleOptInFrom": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "From address used for double opt-in emails (must use a verified domain)",
+                      "example": "Newsletter <hello@example.com>"
+                    },
+                    "doubleOptInSubject": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Subject line used for double opt-in confirmation email",
+                      "example": "Please confirm your subscription"
+                    },
+                    "doubleOptInContent": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Email editor JSON content used for double opt-in confirmation"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "description": "The creation timestamp"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "description": "The last update timestamp"
+                    },
+                    "_count": {
+                      "type": "object",
+                      "properties": {
+                        "contacts": {
+                          "type": "number",
+                          "description": "The number of contacts in the contact book"
+                        }
+                      },
+                      "required": ["contacts"]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "teamId",
+                    "properties",
+                    "variables",
+                    "emoji",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/contactBooks/{contactBookId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": { "type": "string", "example": "clx1234567890" },
+            "required": true,
+            "name": "contactBookId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve the contact book",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The ID of the contact book",
+                      "example": "clx1234567890"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the contact book",
+                      "example": "Newsletter Subscribers"
+                    },
+                    "teamId": {
+                      "type": "number",
+                      "description": "The ID of the team",
+                      "example": 1
+                    },
+                    "properties": {
+                      "type": "object",
+                      "additionalProperties": { "type": "string" },
+                      "description": "Custom properties for the contact book",
+                      "example": { "customField1": "value1" }
+                    },
+                    "variables": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Allowed personalization variables for contacts in this book",
+                      "example": ["registrationCode", "company"]
+                    },
+                    "emoji": {
+                      "type": "string",
+                      "description": "The emoji associated with the contact book",
+                      "example": "📙"
+                    },
+                    "doubleOptInEnabled": {
+                      "type": "boolean",
+                      "description": "Whether double opt-in is enabled for new contacts",
+                      "example": true
+                    },
+                    "doubleOptInFrom": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "From address used for double opt-in emails (must use a verified domain)",
+                      "example": "Newsletter <hello@example.com>"
+                    },
+                    "doubleOptInSubject": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Subject line used for double opt-in confirmation email",
+                      "example": "Please confirm your subscription"
+                    },
+                    "doubleOptInContent": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Email editor JSON content used for double opt-in confirmation"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "description": "The creation timestamp"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "description": "The last update timestamp"
+                    },
+                    "_count": {
+                      "type": "object",
+                      "properties": {
+                        "contacts": {
+                          "type": "number",
+                          "description": "The number of contacts in the contact book"
+                        }
+                      },
+                      "required": ["contacts"]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "teamId",
+                    "properties",
+                    "variables",
+                    "emoji",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - API key doesn't have access to this contact book",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "error": { "type": "string" } },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contact book not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "error": { "type": "string" } },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "schema": { "type": "string", "example": "clx1234567890" },
+            "required": true,
+            "name": "contactBookId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "emoji": { "type": "string" },
+                  "properties": {
+                    "type": "object",
+                    "additionalProperties": { "type": "string" }
+                  },
+                  "doubleOptInEnabled": { "type": "boolean" },
+                  "doubleOptInFrom": { "type": "string", "nullable": true },
+                  "doubleOptInSubject": { "type": "string" },
+                  "doubleOptInContent": { "type": "string" },
+                  "variables": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update the contact book",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The ID of the contact book",
+                      "example": "clx1234567890"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the contact book",
+                      "example": "Newsletter Subscribers"
+                    },
+                    "teamId": {
+                      "type": "number",
+                      "description": "The ID of the team",
+                      "example": 1
+                    },
+                    "properties": {
+                      "type": "object",
+                      "additionalProperties": { "type": "string" },
+                      "description": "Custom properties for the contact book",
+                      "example": { "customField1": "value1" }
+                    },
+                    "variables": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Allowed personalization variables for contacts in this book",
+                      "example": ["registrationCode", "company"]
+                    },
+                    "emoji": {
+                      "type": "string",
+                      "description": "The emoji associated with the contact book",
+                      "example": "📙"
+                    },
+                    "doubleOptInEnabled": {
+                      "type": "boolean",
+                      "description": "Whether double opt-in is enabled for new contacts",
+                      "example": true
+                    },
+                    "doubleOptInFrom": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "From address used for double opt-in emails (must use a verified domain)",
+                      "example": "Newsletter <hello@example.com>"
+                    },
+                    "doubleOptInSubject": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Subject line used for double opt-in confirmation email",
+                      "example": "Please confirm your subscription"
+                    },
+                    "doubleOptInContent": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Email editor JSON content used for double opt-in confirmation"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "description": "The creation timestamp"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "description": "The last update timestamp"
+                    },
+                    "_count": {
+                      "type": "object",
+                      "properties": {
+                        "contacts": {
+                          "type": "number",
+                          "description": "The number of contacts in the contact book"
+                        }
+                      },
+                      "required": ["contacts"]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "teamId",
+                    "properties",
+                    "variables",
+                    "emoji",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - API key doesn't have access to this contact book",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "error": { "type": "string" } },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contact book not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "error": { "type": "string" } },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": { "type": "string", "example": "clx1234567890" },
+            "required": true,
+            "name": "contactBookId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contact book deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  },
+                  "required": ["id", "success", "message"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - API key doesn't have access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "error": { "type": "string" } },
+                  "required": ["error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contact book not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "error": { "type": "string" } },
+                  "required": ["error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/campaigns": {
       "post": {
         "requestBody": {
@@ -1491,6 +2167,101 @@
             }
           }
         }
+      },
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Page number for pagination (default: 1)",
+              "example": "1"
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["DRAFT", "SCHEDULED", "RUNNING", "PAUSED", "SENT"],
+              "description": "Filter campaigns by status",
+              "example": "DRAFT"
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Search campaigns by name or subject",
+              "example": "newsletter"
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get list of campaigns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "campaigns": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "name": { "type": "string" },
+                          "from": { "type": "string" },
+                          "subject": { "type": "string" },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "status": { "type": "string" },
+                          "scheduledAt": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
+                          "total": { "type": "integer" },
+                          "sent": { "type": "integer" },
+                          "delivered": { "type": "integer" },
+                          "unsubscribed": { "type": "integer" }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "from",
+                          "subject",
+                          "createdAt",
+                          "updatedAt",
+                          "status",
+                          "scheduledAt",
+                          "total",
+                          "sent",
+                          "delivered",
+                          "unsubscribed"
+                        ]
+                      }
+                    },
+                    "totalPage": { "type": "integer" }
+                  },
+                  "required": ["campaigns", "totalPage"]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/campaigns/{campaignId}": {
@@ -1510,6 +2281,95 @@
         "responses": {
           "200": {
             "description": "Get campaign details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "from": { "type": "string" },
+                    "subject": { "type": "string" },
+                    "previewText": { "type": "string", "nullable": true },
+                    "contactBookId": { "type": "string", "nullable": true },
+                    "html": { "type": "string", "nullable": true },
+                    "content": { "type": "string", "nullable": true },
+                    "status": { "type": "string" },
+                    "scheduledAt": {
+                      "type": "string",
+                      "nullable": true,
+                      "format": "date-time"
+                    },
+                    "batchSize": { "type": "integer" },
+                    "batchWindowMinutes": { "type": "integer" },
+                    "total": { "type": "integer" },
+                    "sent": { "type": "integer" },
+                    "delivered": { "type": "integer" },
+                    "opened": { "type": "integer" },
+                    "clicked": { "type": "integer" },
+                    "unsubscribed": { "type": "integer" },
+                    "bounced": { "type": "integer" },
+                    "hardBounced": { "type": "integer" },
+                    "complained": { "type": "integer" },
+                    "replyTo": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "cc": { "type": "array", "items": { "type": "string" } },
+                    "bcc": { "type": "array", "items": { "type": "string" } },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "updatedAt": { "type": "string", "format": "date-time" }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "from",
+                    "subject",
+                    "previewText",
+                    "contactBookId",
+                    "html",
+                    "content",
+                    "status",
+                    "scheduledAt",
+                    "batchSize",
+                    "batchWindowMinutes",
+                    "total",
+                    "sent",
+                    "delivered",
+                    "opened",
+                    "clicked",
+                    "unsubscribed",
+                    "bounced",
+                    "hardBounced",
+                    "complained",
+                    "replyTo",
+                    "cc",
+                    "bcc",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "cmp_123"
+            },
+            "required": true,
+            "name": "campaignId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete campaign",
             "content": {
               "application/json": {
                 "schema": {
@@ -1688,6 +2548,131 @@
                   "type": "object",
                   "properties": { "success": { "type": "boolean" } },
                   "required": ["success"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/email-time-series": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["7", "30"],
+              "description": "Number of days to retrieve data for (default: 30)",
+              "example": "30"
+            },
+            "required": false,
+            "name": "days",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by domain ID"
+            },
+            "required": false,
+            "name": "domainId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve email time series data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": { "type": "string" },
+                          "sent": { "type": "integer" },
+                          "delivered": { "type": "integer" },
+                          "opened": { "type": "integer" },
+                          "clicked": { "type": "integer" },
+                          "bounced": { "type": "integer" },
+                          "complained": { "type": "integer" }
+                        },
+                        "required": [
+                          "date",
+                          "sent",
+                          "delivered",
+                          "opened",
+                          "clicked",
+                          "bounced",
+                          "complained"
+                        ]
+                      }
+                    },
+                    "totalCounts": {
+                      "type": "object",
+                      "properties": {
+                        "sent": { "type": "integer" },
+                        "delivered": { "type": "integer" },
+                        "opened": { "type": "integer" },
+                        "clicked": { "type": "integer" },
+                        "bounced": { "type": "integer" },
+                        "complained": { "type": "integer" }
+                      },
+                      "required": [
+                        "sent",
+                        "delivered",
+                        "opened",
+                        "clicked",
+                        "bounced",
+                        "complained"
+                      ]
+                    }
+                  },
+                  "required": ["result", "totalCounts"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/reputation-metrics": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by domain ID"
+            },
+            "required": false,
+            "name": "domainId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve reputation metrics data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "delivered": { "type": "integer" },
+                    "hardBounced": { "type": "integer" },
+                    "complained": { "type": "integer" },
+                    "bounceRate": { "type": "number" },
+                    "complaintRate": { "type": "number" }
+                  },
+                  "required": [
+                    "delivered",
+                    "hardBounced",
+                    "complained",
+                    "bounceRate",
+                    "complaintRate"
+                  ]
                 }
               }
             }

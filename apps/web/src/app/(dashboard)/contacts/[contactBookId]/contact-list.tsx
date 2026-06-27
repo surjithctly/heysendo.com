@@ -23,8 +23,10 @@ import { api } from "~/trpc/react";
 import { getGravatarUrl } from "~/utils/gravatar-utils";
 import DeleteContact from "./delete-contact";
 import EditContact from "./edit-contact";
+import { ResendDoubleOptInConfirmation } from "./resend-double-opt-in-confirmation";
 import { Input } from "@usesend/ui/src/input";
 import { useDebouncedCallback } from "use-debounce";
+import { getContactPropertyValue } from "~/lib/contact-properties";
 import {
   Tooltip,
   TooltipContent,
@@ -70,9 +72,13 @@ function getUnsubscribeReason(reason: UnsubscribeReason) {
 export default function ContactList({
   contactBookId,
   contactBookName,
+  doubleOptInEnabled,
+  contactBookVariables,
 }: {
   contactBookId: string;
   contactBookName?: string;
+  doubleOptInEnabled?: boolean;
+  contactBookVariables?: string[];
 }) {
   const [page, setPage] = useUrlState("page", "1");
   const [status, setStatus] = useUrlState("status");
@@ -93,8 +99,14 @@ export default function ContactList({
   });
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
-    setSearch(value);
+    setSearch(value || null);
+    setPage("1");
   }, 1000);
+
+  const handleStatusChange = (val: string) => {
+    setStatus(val === "All" ? null : val);
+    setPage("1");
+  };
 
   const exportQuery = api.contacts.exportContacts.useQuery(
     {
@@ -132,6 +144,7 @@ export default function ContactList({
       "Subscribed",
       "Unsubscribe Reason",
       "Created At",
+      ...(contactBookVariables ?? []),
     ];
 
     // CSV Rows
@@ -142,6 +155,15 @@ export default function ContactList({
       escapeCell(contact.subscribed ? "Yes" : "No"),
       escapeCell(contact.unsubscribeReason ?? ""),
       escapeCell(contact.createdAt.toISOString()),
+      ...(contactBookVariables ?? []).map((variable) =>
+        escapeCell(
+          getContactPropertyValue(
+            (contact.properties as Record<string, unknown> | undefined) ?? {},
+            variable,
+            contactBookVariables ?? [],
+          ) ?? "",
+        ),
+      ),
     ]);
 
     // Build CSV with UTF-8 BOM
@@ -179,10 +201,7 @@ export default function ContactList({
             />
           </div>
           <div className="flex gap-2">
-            <Select
-              value={status ?? "All"}
-              onValueChange={(val) => setStatus(val === "All" ? null : val)}
-            >
+            <Select value={status ?? "All"} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-[180px] capitalize">
                 {status || "All statuses"}
               </SelectTrigger>
@@ -237,66 +256,87 @@ export default function ContactList({
                   </TableCell>
                 </TableRow>
               ) : contactsQuery.data?.contacts.length ? (
-                contactsQuery.data?.contacts.map((contact) => (
-                  <TableRow key={contact.id} className="">
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Image
-                          src={getGravatarUrl(contact.email, {
-                            size: 75,
-                            defaultImage: "robohash",
-                          })}
-                          alt={contact.email + "'s gravatar"}
-                          width={35}
-                          height={35}
-                          className="rounded-full"
-                        />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">
-                            {contact.email}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {contact.firstName} {contact.lastName}
-                          </span>
+                contactsQuery.data?.contacts.map((contact) => {
+                  const isPendingConfirmation =
+                    Boolean(doubleOptInEnabled) &&
+                    !contact.subscribed &&
+                    !contact.unsubscribeReason;
+
+                  return (
+                    <TableRow key={contact.id} className="">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <Image
+                            src={getGravatarUrl(contact.email, {
+                              size: 75,
+                              defaultImage: "robohash",
+                            })}
+                            alt={contact.email + "'s gravatar"}
+                            width={35}
+                            height={35}
+                            className="rounded-full"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">
+                              {contact.email}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {contact.firstName} {contact.lastName}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {contact.subscribed ? (
-                        <div className="text-center w-[130px] rounded capitalize py-1 text-xs bg-green/15 text-green border border-green/25">
-                          Subscribed
+                      </TableCell>
+                      <TableCell>
+                        {contact.subscribed ? (
+                          <div className="text-center w-[130px] rounded capitalize py-1 text-xs bg-green/15 text-green border border-green/25">
+                            Subscribed
+                          </div>
+                        ) : isPendingConfirmation ? (
+                          <div className="text-center w-[130px] rounded capitalize py-1 text-xs bg-yellow/20 text-yellow border border-yellow/20">
+                            Pending
+                          </div>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <div className="text-center w-[130px] rounded capitalize py-1 text-xs bg-red/10 text-red border border-red/10">
+                                Unsubscribed
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {getUnsubscribeReason(
+                                  contact.unsubscribeReason ??
+                                    UnsubscribeReason.UNSUBSCRIBED,
+                                )}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+                      <TableCell className="">
+                        {formatDistanceToNow(new Date(contact.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {isPendingConfirmation ? (
+                            <ResendDoubleOptInConfirmation
+                              contactBookId={contactBookId}
+                              contactId={contact.id}
+                              email={contact.email}
+                            />
+                          ) : null}
+                          <EditContact
+                            contact={contact}
+                            contactBookVariables={contactBookVariables}
+                          />
+                          <DeleteContact contact={contact} />
                         </div>
-                      ) : (
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <div className="text-center w-[130px] rounded capitalize py-1 text-xs bg-red/10 text-red border border-red/10">
-                              Unsubscribed
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {getUnsubscribeReason(
-                                contact.unsubscribeReason ??
-                                  UnsubscribeReason.UNSUBSCRIBED,
-                              )}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </TableCell>
-                    <TableCell className="">
-                      {formatDistanceToNow(new Date(contact.createdAt), {
-                        addSuffix: true,
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <EditContact contact={contact} />
-                        <DeleteContact contact={contact} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow className="h-32">
                   <TableCell colSpan={4} className="text-center py-4">
